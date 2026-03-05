@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>百大名医</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex justify-center items-center h-[100dvh] bg-gray-100 sm:p-4">
+    <div class="w-full max-w-[400px] h-full sm:h-[850px] bg-[#F5F4F9] relative flex flex-col shadow-2xl sm:rounded-[32px] sm:border-[8px] sm:border-white overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-b from-[#F2EDFB] to-[#F5F4F9] pt-12 pb-2 px-4 z-10 shrink-0">
+            <div class="flex items-center relative mb-4">
+                <i class="fa-solid fa-arrow-left text-xl cursor-pointer"></i>
+                <h1 class="absolute left-1/2 transform -translate-x-1/2 text-[17px] font-medium text-gray-900">智能体</h1>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="bg-white/60 rounded-full h-10 flex items-center px-4 mb-5 border border-white scroll-shadow">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 mr-2"></i>
+                <input type="text" placeholder="搜索服务" class="bg-transparent border-none outline-none text-[15px] w-full placeholder-gray-500">
+            </div>
+
+            <!-- Main Tabs -->
+            <div class="flex justify-between items-center mb-4 px-1">
+                <div class="text-[20px] font-bold text-[#3B2E7E] border-b-[3px] border-[#5D5DF0] pb-1 relative">
+                    <i class="fa-solid fa-leaf text-[#A5B4FC] absolute -left-4 top-1 text-sm opacity-50 transform -rotate-45"></i>
+                    百大名医
+                    <i class="fa-solid fa-leaf text-[#A5B4FC] absolute -right-4 bottom-2 text-sm opacity-50 transform rotate-45"></i>
+                </div>
+                <div class="text-[16px] text-gray-500 cursor-pointer">减重专区</div>
+                <div class="text-[16px] text-gray-500 cursor-pointer">健康生活</div>
+                <div class="text-[16px] text-gray-500 cursor-pointer">就医医保</div>
+            </div>
+
+            <!-- Sub Tabs (Pills) -->
+            <div class="flex gap-2 overflow-x-auto hide-scroll mb-3">
+                <div class="shrink-0 bg-[#5D5DF0] text-white px-5 py-1.5 rounded-full text-[14px] font-medium cursor-pointer">全部</div>
+                <div class="shrink-0 bg-white text-gray-600 px-4 py-1.5 rounded-full text-[14px] cursor-pointer">院士领衔</div>
+                <div class="shrink-0 bg-white text-gray-600 px-4 py-1.5 rounded-full text-[14px] cursor-pointer">国医大师</div>
+                <div class="shrink-0 bg-white text-gray-600 px-4 py-1.5 rounded-full text-[14px] cursor-pointer">乳腺专科</div>
+            </div>
+
+            <!-- Notice -->
+            <div class="flex items-center justify-center gap-1.5 text-[12px] text-gray-400 mt-2 mb-2">
+                <i class="fa-regular fa-circle-info"></i>
+                百大名医由院士领衔，名医AI分身24小时免费咨询
+                <i class="fa-solid fa-play text-[8px] ml-0.5"></i>
+            </div>
+        </div>
+
+        <!-- Doctor List -->
+        <div class="flex-1 overflow-y-auto px-4 pb-8 space-y-3">
+            
+            <!-- Doctor Card 1 -->
+            <div class="bg-white rounded-[20px] p-4 shadow-sm">
+                <div class="flex gap-3">
+                    <div class="relative w-14 h-14 shrink-0 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 text-2xl">
+                        <i class="fa-solid fa-lungs"></i>
+                        <div class="absolute -top-1 -right-1 bg-[#5D5DF0] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg rounded-tl-sm rounded-br-sm border border-white">AI</div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[17px] font-bold text-gray-900 mb-1">王俊院士团队</div>
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <span class="bg-[#2D336B] text-white text-[11px] px-1.5 py-0.5 rounded-sm flex items-center gap-0.5"><i class="fa-solid fa-award text-yellow-500"></i>中国工程院</span>
+                            <span class="bg-[#F3E8DF] text-[#A67C52] text-[11px] px-1.5 py-0.5 rounded-sm">院士团队</span>
+                            <span class="bg-[#F3F4F6] text-[#6366F1] text-[11px] px-1.5 py-0.5 rounded-sm border border-[#E0E7FF]">胸外科</span>
+                        </div>
+                        <div class="text-[13px] text-gray-700 flex items-center gap-1 mb-2">
+                            <span class="bg-indigo-50 text-indigo-500 border border-indigo-100 text-[10px] px-1 py-px rounded border border-indigo-200">三甲</span>
+                            北京大学人民医院
+                        </div>
+                        <div class="text-[13px] text-gray-500 line-clamp-2 leading-relaxed mb-2">
+                            擅长：胸部疾病微创诊疗、肺癌精准治疗、智能外科技术研发及临床转化多个前沿方向
+                        </div>
+                        <div class="text-[12px] text-gray-400 mb-3 flex items-center gap-1">
+                            <i class="fa-regular fa-comment-dots"></i> 114.2 万人咨询
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-[#F4F5FB] rounded-xl p-3 flex justify-between items-center mt-1">
+                    <div class="text-[14px] text-[#2D336B] font-medium">王俊医生AI分身是什么？</div>
+                    <button class="bg-[#5D5DF0] text-white text-[13px] font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#4F4DE4] transition shadow-sm">
+                        <i class="fa-solid fa-sparkles"></i> 去问问
+                    </button>
+                </div>
+            </div>
+
+            <!-- Doctor Card 2 -->
+            <div class="bg-white rounded-[20px] p-4 shadow-sm">
+                <div class="flex gap-3">
+                    <div class="relative w-14 h-14 shrink-0 rounded-full overflow-hidden border border-gray-100">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop" class="w-full h-full object-cover" alt="Doctor avatar">
+                        <div class="absolute top-0 right-0 bg-[#5D5DF0] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg border border-white z-10">AI</div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[17px] font-bold text-gray-900 mb-1">廖万清</div>
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <span class="bg-[#2D336B] text-white text-[11px] px-1.5 py-0.5 rounded-sm flex items-center gap-0.5"><i class="fa-solid fa-award text-yellow-500"></i>中国工程院</span>
+                            <span class="bg-[#F3E8DF] text-[#A67C52] text-[11px] px-1.5 py-0.5 rounded-sm">院士团队</span>
+                            <span class="bg-[#F3F4F6] text-[#6366F1] text-[11px] px-1.5 py-0.5 rounded-sm border border-[#E0E7FF]">皮肤性病科</span>
+                        </div>
+                        <div class="text-[13px] text-gray-700 flex items-center gap-1 mb-2">
+                            <span class="bg-indigo-50 text-indigo-500 border border-indigo-100 text-[10px] px-1 py-px rounded border border-indigo-200">三甲</span>
+                            海军军医大学第二附属医院
+                        </div>
+                        <div class="text-[13px] text-gray-500 line-clamp-2 leading-relaxed mb-2">
+                            擅长：真菌性皮肤病诊治；针对扁平疣、皮炎湿疹等疾病，研发各类创新疗法及自制剂
+                        </div>
+                        <div class="text-[12px] text-gray-400 flex items-center gap-1">
+                            <i class="fa-regular fa-comment-dots"></i> 50.0 万人咨询
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Card 3 -->
+            <div class="bg-white rounded-[20px] p-4 shadow-sm">
+                <div class="flex gap-3">
+                    <div class="relative w-14 h-14 shrink-0 rounded-full overflow-hidden border border-gray-100">
+                        <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&h=150&fit=crop" class="w-full h-full object-cover" alt="Doctor avatar">
+                        <div class="absolute top-0 right-0 bg-[#5D5DF0] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg border border-white z-10">AI</div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[17px] font-bold text-gray-900 mb-1">王建安</div>
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <span class="bg-[#2D336B] text-white text-[11px] px-1.5 py-0.5 rounded-sm flex items-center gap-0.5"><i class="fa-solid fa-award text-yellow-500"></i>中国科学院</span>
+                            <span class="bg-[#F3E8DF] text-[#A67C52] text-[11px] px-1.5 py-0.5 rounded-sm">院士团队</span>
+                            <span class="bg-[#F3F4F6] text-[#6366F1] text-[11px] px-1.5 py-0.5 rounded-sm border border-[#E0E7FF]">心血管内科</span>
+                        </div>
+                        <div class="text-[13px] text-gray-700 flex items-center gap-1 mb-2">
+                            <span class="bg-indigo-50 text-indigo-500 border border-indigo-100 text-[10px] px-1 py-px rounded border border-indigo-200">三甲</span>
+                            浙江大学医学院附属第二医院
+                        </div>
+                        <div class="text-[13px] text-gray-500 line-clamp-2 leading-relaxed mb-2">
+                            擅长：心血管疑难杂症，心脏瓣膜病介入诊治。覆盖主动脉瓣、二尖瓣等全瓣膜病。
+                        </div>
+                        <div class="text-[12px] text-gray-400 flex items-center gap-1">
+                            <i class="fa-regular fa-comment-dots"></i> 53.5 万人咨询
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

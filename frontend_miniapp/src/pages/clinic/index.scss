@@ -1,0 +1,188 @@
+.clinic {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f0f0f0;
+}
+
+.msg-list {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+// 消息行
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
+
+  &.ai {
+    flex-direction: row;
+  }
+  &.user {
+    flex-direction: row-reverse;
+  }
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+
+  &.ai-avatar {
+    background: #e8f5e9;
+    border: 2px solid #4CAF50;
+  }
+  &.user-avatar {
+    background: #4CAF50;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.bubble-wrap {
+  max-width: 72%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.msg-image {
+  width: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bubble {
+  padding: 12px 14px;
+  border-radius: 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  &.ai {
+    background: #fff;
+    border-top-left-radius: 4px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  }
+  &.user {
+    background: #4CAF50;
+    border-top-right-radius: 4px;
+  }
+}
+
+.bubble-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #222;
+
+  .user & {
+    color: #fff;
+  }
+}
+
+// 打字动画
+.typing-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  height: 20px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #4CAF50;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.4s; }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-6px); opacity: 1; }
+}
+
+// 待发送图片条
+.pending-image-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+
+.pending-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.pending-tip {
+  flex: 1;
+  font-size: 13px;
+  color: #666;
+}
+
+.pending-remove {
+  font-size: 18px;
+  color: #999;
+  padding: 4px 8px;
+}
+
+// 输入栏
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+.img-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border-radius: 50%;
+  background: #f0f0f0;
+}
+
+.text-input {
+  flex: 1;
+  background: #f6f6f6;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  min-height: 38px;
+}
+
+.send-btn {
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.disabled {
+    background: #ccc;
+    pointer-events: none;
+  }
+}

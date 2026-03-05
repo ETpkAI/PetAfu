@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 智能相机</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+    /* ── 页面切换 ── */
+    .page { display: none; }
+    .page.active { display: flex; }
+
+    /* ── 相机取景器 ── */
+    #video-el {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    /* 取景框四角 */
+    .corner {
+      position: absolute; width: 24px; height: 24px;
+      border-color: white; border-style: solid;
+    }
+    .corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+    .corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+    /* ── 扫描线动画 ── */
+    @keyframes scan {
+      0% { transform: translateY(0); opacity: 0.8; }
+      100% { transform: translateY(200px); opacity: 0; }
+    }
+    .scan-line {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(93,93,222,0.8), transparent);
+      animation: scan 2s ease-in-out infinite;
+    }
+
+    /* ── 拍照按钮 ── */
+    .shutter-btn {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: white;
+      border: 6px solid rgba(255,255,255,0.4);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+    .shutter-btn:active { transform: scale(0.92); }
+
+    /* ── 结果页分析动画 ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+    .fade-up:nth-child(2) { animation-delay: 0.1s; opacity: 0; }
+    .fade-up:nth-child(3) { animation-delay: 0.2s; opacity: 0; }
+
+    /* ── 加载旋转 ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.8s linear infinite; }
+  </style>
+</head>
+<body class="flex justify-center items-center h-[100dvh] bg-gray-100 sm:p-4">
+
+  <!-- ════ PHONE FRAME ════ -->
+  <div id="phone" class="w-full max-w-[400px] h-full sm:h-[850px] bg-[#111] relative shadow-2xl sm:rounded-[32px] sm:border-[8px] sm:border-gray-800 overflow-hidden">
+
+    <!-- ═══════════════════════════════════════════════════
+         PAGE 1：说明底部 Sheet（初始状态）
+    ═══════════════════════════════════════════════════ -->
+    <div id="page-guide" class="page active w-full h-full flex-col">
+      <!-- 背景相机模拟 -->
+      <div class="absolute inset-0 z-0">
+        <img src="https://images.unsplash.com/photo-1477672680933-0287a151330e?w=500&h=800&fit=crop"
+             class="w-full h-full object-cover opacity-50" alt="bg">
+      </div>
+
+      <!-- Header -->
+      <div class="pt-12 pb-4 px-4 flex justify-between items-center z-10 text-white relative">
+        <i class="fa-solid fa-arrow-left text-xl cursor-pointer" onclick="history.back()"></i>
+        <h1 class="absolute left-1/2 -translate-x-1/2 text-[17px] font-medium">AI 智能相机</h1>
+        <div class="flex gap-4">
+          <i class="fa-regular fa-circle-question text-lg cursor-pointer"></i>
+          <i class="fa-solid fa-bolt text-lg cursor-pointer"></i>
+        </div>
+      </div>
+
+      <!-- 底部说明 Sheet -->
+      <div class="absolute bottom-0 left-0 w-full bg-[#EBEAF5] rounded-t-[28px] z-20 flex flex-col pb-8 pt-6 px-5">
+        <h2 class="text-[24px] font-bold text-[#1F2937] leading-tight mb-3 flex flex-col">
+          <span>拍摄宠物症状 <i class="fa-solid fa-sparkles text-[#5D5DF0] text-lg ml-1"></i></span>
+          <span>让 AI <span class="text-[#5D5DF0]">智能分析</span>健康状况</span>
+        </h2>
+
+        <!-- 标签选择 -->
+        <div class="flex gap-2 mb-4 overflow-x-auto pb-1" style="scrollbar-width:none">
+          <button class="shrink-0 px-4 py-1.5 bg-[#5D5DF0] text-white text-[13px] font-medium rounded-full">拍皮肤/伤口</button>
+          <button class="shrink-0 px-4 py-1.5 bg-white text-gray-600 text-[13px] font-medium rounded-full border border-gray-200">拍眼睛</button>
+          <button class="shrink-0 px-4 py-1.5 bg-white text-gray-600 text-[13px] font-medium rounded-full border border-gray-200">拍粪便</button>
+          <button class="shrink-0 px-4 py-1.5 bg-white text-gray-600 text-[13px] font-medium rounded-full border border-gray-200">拍药盒</button>
+        </div>
+
+        <p class="text-[13px] text-gray-500 leading-relaxed mb-4">
+          对准 <strong>患部位置</strong> 拍摄，保持光线充足、图片清晰。AI 将根据图片结合症状描述进行分析。
+        </p>
+
+        <!-- 示意图 -->
+        <div class="bg-white/80 rounded-2xl p-3 mb-5 flex gap-4">
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full h-14 bg-green-50 rounded-xl flex items-center justify-center">
+              <i class="fa-solid fa-circle-check text-green-500 text-2xl"></i>
+            </div>
+            <span class="text-[11px] text-gray-500">清晰完整</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full h-14 bg-red-50 rounded-xl flex items-center justify-center">
+              <i class="fa-solid fa-eye-slash text-red-400 text-2xl"></i>
+            </div>
+            <span class="text-[11px] text-gray-500">模糊不清</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full h-14 bg-red-50 rounded-xl flex items-center justify-center">
+              <i class="fa-solid fa-rotate text-red-400 text-2xl"></i>
+            </div>
+            <span class="text-[11px] text-gray-500">角度奇怪</span>
+          </div>
+        </div>
+
+        <!-- 我知道了 → 进入相机 -->
+        <button onclick="startCamera()" class="w-full bg-[#5D5DF0] hover:bg-[#4F4DE4] text-white font-medium py-[14px] rounded-full text-[17px] transition shadow-md">
+          我知道了，开始拍照
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         PAGE 2：真实相机取景器
+    ═══════════════════════════════════════════════════ -->
+    <div id="page-camera" class="page w-full h-full flex-col">
+      <!-- 视频流 -->
+      <video id="video-el" autoplay playsinline muted></video>
+      <!-- 画布（用于截图）-->
+      <canvas id="snap-canvas" class="hidden"></canvas>
+
+      <!-- Header -->
+      <div class="absolute top-0 left-0 right-0 pt-12 pb-3 px-4 flex justify-between items-center z-20 text-white"
+           style="background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,transparent 100%)">
+        <i class="fa-solid fa-xmark text-2xl cursor-pointer" onclick="stopCamera()"></i>
+        <h1 class="text-[16px] font-medium">对准患部</h1>
+        <i class="fa-solid fa-camera-rotate text-xl cursor-pointer" onclick="flipCamera()"></i>
+      </div>
+
+      <!-- 取景框 -->
+      <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+        <div class="relative w-[75%] h-52">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-28 z-10 text-white/60 text-xs pointer-events-none">
+        将患部置于框内
+      </div>
+
+      <!-- 底部控制栏 -->
+      <div class="absolute bottom-0 left-0 right-0 pb-10 pt-6 z-20 flex items-center justify-between px-10"
+           style="background:linear-gradient(0deg,rgba(0,0,0,0.6) 0%,transparent 100%)">
+        <!-- 相册选图 -->
+        <label class="flex flex-col items-center gap-1 cursor-pointer">
+          <div class="w-12 h-12 rounded-xl overflow-hidden border-2 border-white/50 bg-gray-700 flex items-center justify-center">
+            <i class="fa-solid fa-image text-white text-xl"></i>
+          </div>
+          <span class="text-white/70 text-[11px]">相册</span>
+          <input type="file" accept="image/*" class="hidden" id="gallery-input" onchange="handleGalleryPick(this)">
+        </label>
+
+        <!-- 拍照按钮 -->
+        <button class="shutter-btn" onclick="takePhoto()"></button>
+
+        <!-- 切换闪光 -->
+        <div class="flex flex-col items-center gap-1 cursor-pointer" onclick="toggleFlash(this)">
+          <div class="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-white text-xl"></i>
+          </div>
+          <span class="text-white/70 text-[11px]">闪光</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         PAGE 3：预览 + 问诊入口
+    ═══════════════════════════════════════════════════ -->
+    <div id="page-preview" class="page w-full h-full flex-col">
+      <!-- 顶部 Header -->
+      <div class="absolute top-0 left-0 right-0 pt-12 pb-3 px-4 flex justify-between items-center z-20 text-white"
+           style="background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,transparent 100%)">
+        <i class="fa-solid fa-arrow-left text-2xl cursor-pointer" onclick="retake()"></i>
+        <h1 class="text-[16px] font-medium">确认照片</h1>
+        <span class="text-[14px] opacity-60">重拍</span>
+      </div>
+
+      <!-- 照片预览 -->
+      <img id="preview-img" src="" class="w-full h-full object-cover" alt="preview">
+
+      <!-- 底部操作面板 -->
+      <div class="absolute bottom-0 left-0 right-0 z-20 bg-[#EBEAF5] rounded-t-[28px] px-5 pt-6 pb-10">
+        <!-- 症状描述输入 -->
+        <div class="mb-4">
+          <div class="text-[13px] text-gray-500 mb-2 font-medium">补充描述（可选）</div>
+          <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm">
+            <textarea id="symptom-input" rows="2"
+              placeholder="如：红肿 3 天了，有液体渗出…"
+              class="flex-1 bg-transparent border-none outline-none text-[14px] text-gray-700 placeholder-gray-400 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex gap-3">
+          <button onclick="retake()"
+            class="flex-1 py-3.5 rounded-full border-2 border-[#5D5DF0] text-[#5D5DF0] font-medium text-[15px] hover:bg-indigo-50 transition">
+            重新拍摄
+          </button>
+          <button onclick="analyzeImage()"
+            class="flex-2 px-8 py-3.5 rounded-full bg-[#5D5DF0] text-white font-medium text-[15px] shadow-md hover:bg-[#4F4DE4] transition flex items-center gap-2">
+            <i class="fa-solid fa-sparkles"></i> AI 分析
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         PAGE 4：AI 分析结果
+    ═══════════════════════════════════════════════════ -->
+    <div id="page-result" class="page w-full h-full flex-col bg-[#F4F5FF] overflow-y-auto">
+      <!-- Header -->
+      <div class="px-5 pt-14 pb-4 flex items-center gap-3 bg-white/80 backdrop-blur sticky top-0 z-20">
+        <i class="fa-solid fa-arrow-left text-xl cursor-pointer text-[#2D336B]" onclick="showPage('page-guide'); stopCamera()"></i>
+        <h1 class="text-[17px] font-bold text-[#2D336B]">AI 分析结果</h1>
+      </div>
+
+      <!-- 图片缩略 + 基本信息 -->
+      <div class="mx-5 mt-4 mb-4 rounded-2xl overflow-hidden shadow-sm bg-white flex items-center gap-4 p-4">
+        <img id="result-thumb" src="" class="w-16 h-16 rounded-xl object-cover flex-shrink-0">
+        <div>
+          <div class="text-[13px] text-gray-400 mb-1">分析部位</div>
+          <div class="text-[16px] font-bold text-[#2D336B]" id="result-area">皮肤/伤口</div>
+        </div>
+      </div>
+
+      <!-- AI 结果区域 -->
+      <div class="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-full bg-[#5D5DF0] flex items-center justify-center">
+            <i class="fa-solid fa-robot text-white text-xs"></i>
+          </div>
+          <span class="text-[14px] font-bold text-[#2D336B]">阿福 AI 分析</span>
+        </div>
+        <div id="result-text" class="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[80px]">
+          <span id="loading-indicator" class="flex items-center gap-2 text-gray-400">
+            <i class="fa-solid fa-circle-notch spinner"></i> AI 分析中，请稍候…
+          </span>
+        </div>
+      </div>
+
+      <!-- 底部去问诊按钮 -->
+      <div class="mx-5 mb-10">
+        <button onclick="gotoChat()"
+          class="w-full py-4 rounded-full bg-gradient-to-r from-[#5D5DF0] to-[#7C3AED] text-white font-medium text-[16px] shadow-lg hover:opacity-90 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-comment-medical"></i> 继续向 AI 医生咨询
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /phone frame -->
+
+  <!-- 隐藏文件输入（用于从相框页面也能选图）-->
+  <input type="file" id="hidden-file" accept="image/*" class="hidden" onchange="handleFileInput(this)">
+
+  <script>
+    const API_BASE = 'http://localhost:8000'
+    let stream = null
+    let facingMode = 'environment' // 默认后置
+    let capturedDataUrl = null
+
+    // ── 页面切换 ──
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+      document.getElementById(id).classList.add('active')
+    }
+
+    // ── 启动相机 ──
+    async function startCamera() {
+      showPage('page-camera')
+      await openStream()
+    }
+
+    async function openStream() {
+      if (stream) { stream.getTracks().forEach(t => t.stop()) }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        })
+        document.getElementById('video-el').srcObject = stream
+      } catch (e) {
+        // 权限拒绝时 fallback 到相册
+        alert('无法访问摄像头：' + e.message + '\n\n请使用相册选图。')
+        document.getElementById('gallery-input').click()
+      }
+    }
+
+    // ── 停止相机 ──
+    function stopCamera() {
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null }
+      showPage('page-guide')
+    }
+
+    // ── 前后摄切换 ──
+    function flipCamera() {
+      facingMode = facingMode === 'environment' ? 'user' : 'environment'
+      openStream()
+    }
+
+    // ── 快门拍照 ──
+    function takePhoto() {
+      const video = document.getElementById('video-el')
+      const canvas = document.getElementById('snap-canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      canvas.getContext('2d').drawImage(video, 0, 0)
+      capturedDataUrl = canvas.toDataURL('image/jpeg', 0.85)
+      if (stream) { stream.getTracks().forEach(t => t.stop()) }
+      showPreview(capturedDataUrl)
+    }
+
+    // ── 相册选图 ──
+    function handleGalleryPick(input) {
+      if (!input.files[0]) return
+      const reader = new FileReader()
+      reader.onload = e => {
+        capturedDataUrl = e.target.result
+        if (stream) { stream.getTracks().forEach(t => t.stop()) }
+        showPreview(capturedDataUrl)
+      }
+      reader.readAsDataURL(input.files[0])
+    }
+
+    function handleFileInput(input) { handleGalleryPick(input) }
+
+    // ── 显示预览页 ──
+    function showPreview(dataUrl) {
+      document.getElementById('preview-img').src = dataUrl
+      showPage('page-preview')
+    }
+
+    // ── 重拍 ──
+    function retake() {
+      showPage('page-camera')
+      openStream()
+    }
+
+    // ── AI 分析 ──
+    async function analyzeImage() {
+      if (!capturedDataUrl) return
+      const symptom = document.getElementById('symptom-input').value.trim() || '请分析这张宠物图片，描述可能存在的健康问题'
+
+      // 显示结果页
+      document.getElementById('result-thumb').src = capturedDataUrl
+      document.getElementById('loading-indicator').style.display = 'flex'
+      const resultText = document.getElementById('result-text')
+      resultText.innerHTML = '<span id="loading-indicator" class="flex items-center gap-2 text-gray-400"><i class="fa-solid fa-circle-notch spinner"></i> AI 分析中，请稍候…</span>'
+      showPage('page-result')
+
+      // 把 dataUrl 转换成 Blob
+      const res = await fetch(capturedDataUrl)
+      const blob = await res.blob()
+      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' })
+
+      const form = new FormData()
+      form.append('symptom', symptom)
+      form.append('image', file)
+
+      // 存到 sessionStorage 供 pet_doctor 页面用
+      sessionStorage.setItem('pendingImage', capturedDataUrl)
+      sessionStorage.setItem('pendingSymptom', symptom)
+
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/diagnosis/image`, {
+          method: 'POST', body: form
+        })
+        if (!response.ok) { throw new Error('HTTP ' + response.status) }
+
+        resultText.textContent = ''
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+          const lines = buf.split('\n'); buf = lines.pop()
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const data = line.slice(6)
+            if (data === '[DONE]') break
+            resultText.textContent += data
+          }
+        }
+      } catch (err) {
+        resultText.textContent = '⚠️ 连接 AI 服务失败：' + err.message + '\n\n请确认后端已启动（localhost:8000），或 API 配额充足后重试。'
+      }
+    }
+
+    // ── 跳转到问诊页 ──
+    function gotoChat() {
+      // 带图片跳到 pet_doctor 页，通过 sessionStorage 传递
+      window.location.href = 'pet_doctor.html'
+    }
+
+    // ── 闪光灯（桌面端无效，手机端有效）──
+    function toggleFlash(el) {
+      if (!stream) return
+      const track = stream.getVideoTracks()[0]
+      const cap = track.getCapabilities?.()
+      if (cap && cap.torch) {
+        const current = track.getSettings().torch
+        track.applyConstraints({ advanced: [{ torch: !current }] })
+        el.classList.toggle('text-yellow-300')
+      }
+    }
+  </script>
+</body>
+</html>

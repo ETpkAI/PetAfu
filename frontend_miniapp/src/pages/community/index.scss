@@ -1,0 +1,179 @@
+.community {
+  position: relative;
+  height: 100vh;
+  background: #f0f7f0;
+}
+
+.community-scroll {
+  height: 100%;
+}
+
+.community-header {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  padding: 50px 24px 24px;
+  border-radius: 0 0 28px 28px;
+  margin-bottom: 12px;
+}
+
+.header-title {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.header-sub {
+  display: block;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+}
+
+// 帖子
+.posts {
+  padding: 0 12px 80px;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e8f5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-user-info {
+  flex: 1;
+}
+
+.post-username {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.post-time {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.post-content {
+  display: block;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+
+.post-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.post-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.post-actions {
+  display: flex;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+}
+
+.action-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 14px;
+
+  &.liked {
+    color: #e53935;
+  }
+}
+
+.action-count {
+  font-size: 12px;
+  color: #999;
+
+  .liked & {
+    color: #e53935;
+  }
+}
+
+// 空状态
+.empty-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+}
+
+.empty-emoji {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.loading-text {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 16px 0;
+}
+
+// 发帖 FAB 按钮
+.fab-btn {
+  position: fixed;
+  right: 20px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.45);
+  z-index: 100;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.fab-icon {
+  font-size: 26px;
+}

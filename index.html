@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宠物阿福 · UI 预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+    background: linear-gradient(135deg, #1b5e20, #4CAF50 60%, #a5d6a7);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .container {
+    max-width: 480px;
+    width: 100%;
+    animation: fadeIn .4s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  .logo { text-align: center; margin-bottom: 36px; }
+  .logo .paw { font-size: 60px; }
+  .logo h1 { font-size: 26px; font-weight: 800; color: #fff; margin-top: 10px; }
+  .logo p  { font-size: 14px; color: rgba(255,255,255,.75); margin-top: 4px; }
+
+  .card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .card-title { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 16px; letter-spacing: .05em; text-transform: uppercase; }
+
+  .page-list { display: flex; flex-direction: column; gap: 10px; }
+  .page-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: #f8fdf8;
+    border: 2px solid #e8f5e9;
+    border-radius: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: all .2s;
+  }
+  .page-item:hover { border-color: #4CAF50; background: #e8f5e9; transform: translateX(4px); }
+  .page-icon { font-size: 28px; width: 44px; height: 44px; display:flex; align-items:center; justify-content:center; background:#fff; border-radius:12px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .page-body { flex: 1; }
+  .page-name { font-size: 15px; font-weight: 700; color: #222; }
+  .page-desc { font-size: 12px; color: #888; margin-top: 2px; }
+  .page-arrow { font-size: 20px; color: #ccc; }
+
+  .divider { height: 1px; background: #f0f0f0; margin: 20px 0; }
+  .footer { text-align: center; font-size: 12px; color: #bbb; margin-top: 16px; }
+  .admin-link { display:block; text-align:center; margin-top:12px; color:#4CAF50; font-size:13px; font-weight:600; text-decoration:none; }
+  .admin-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="paw">🐾</div>
+    <h1>宠物阿福</h1>
+    <p>AI宠物健康助手 · UI 界面预览</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📱 界面列表</div>
+    <div class="page-list">
+      <a class="page-item" href="ai_clinic_entry.html" target="_blank">
+        <div class="page-icon">💊</div>
+        <div class="page-body">
+          <div class="page-name">AI 问诊入口</div>
+          <div class="page-desc">症状描述 · 问诊选择主页</div>
+        </div>
+        <div class="page-arrow">›</div>
+      </a>
+      <a class="page-item" href="ai_camera.html" target="_blank">
+        <div class="page-icon">📷</div>
+        <div class="page-body">
+          <div class="page-name">AI 拍照识别</div>
+          <div class="page-desc">上传图片 · 智能分析宠物症状</div>
+        </div>
+        <div class="page-arrow">›</div>
+      </a>
+      <a class="page-item" href="pet_doctor.html" target="_blank">
+        <div class="page-icon">🩺</div>
+        <div class="page-body">
+          <div class="page-name">宠物医生问诊</div>
+          <div class="page-desc">AI 对话 · 流式回答</div>
+        </div>
+        <div class="page-arrow">›</div>
+      </a>
+      <a class="page-item" href="doctor_directory.html" target="_blank">
+        <div class="page-icon">🏥</div>
+        <div class="page-body">
+          <div class="page-name">附近宠物医院</div>
+          <div class="page-desc">医院导航 · 预约就诊</div>
+        </div>
+        <div class="page-arrow">›</div>
+      </a>
+      <a class="page-item" href="user_profile.html" target="_blank">
+        <div class="page-icon">👤</div>
+        <div class="page-body">
+          <div class="page-name">用户档案</div>
+          <div class="page-desc">宠物档案 · 历史记录</div>
+        </div>
+        <div class="page-arrow">›</div>
+      </a>
+    </div>
+
+    <div class="divider"></div>
+    <div class="footer">宠物阿福 v0.1.0 · 后端运行于 localhost:8000</div>
+    <a class="admin-link" href="http://localhost:8000/admin/" target="_blank">⚙️ 管理员面板</a>
+  </div>
+</div>
+</body>
+</html>

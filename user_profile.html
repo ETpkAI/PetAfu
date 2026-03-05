@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户中心 · 宠物阿福</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .page { display: none; }
+    .page.active { display: flex; }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+
+    /* 玻璃卡片 */
+    .glass { background: linear-gradient(135deg,rgba(255,255,255,0.92),rgba(255,255,255,0.7)); border:1px solid rgba(255,255,255,0.85); box-shadow:0 4px 20px rgba(0,0,0,0.04); backdrop-filter:blur(12px); }
+
+    /* 输入框聚焦 */
+    .auth-input { width:100%; padding:14px 16px; border:2px solid #e5e7eb; border-radius:14px; font-size:15px; outline:none; transition:border .2s,box-shadow .2s; background:#fafafa; }
+    .auth-input:focus { border-color:#5D5DF0; box-shadow:0 0 0 4px rgba(93,93,240,0.08); background:#fff; }
+    .auth-input.error { border-color:#ef4444; }
+
+    /* 主按钮 */
+    .btn-primary { width:100%; padding:15px; border-radius:50px; background:linear-gradient(135deg,#5D5DF0,#7C3AED); color:white; font-size:16px; font-weight:600; border:none; cursor:pointer; transition:opacity .2s,transform .1s; box-shadow:0 4px 16px rgba(93,93,240,0.35); }
+    .btn-primary:hover { opacity:.92; }
+    .btn-primary:active { transform:scale(.97); }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* 错误提示 */
+    .err-msg { color:#ef4444; font-size:13px; margin-top:6px; display:none; }
+    .err-msg.show { display:block; }
+
+    /* 动画 */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+    .fade-up { animation:fadeUp .35s ease; }
+
+    /* 个人信息卡片渐变 */
+    .profile-header { background:linear-gradient(135deg,#E7E9FF 0%,#F4EBFA 60%,#F2F4F7 100%); }
+  </style>
+</head>
+<body class="flex justify-center items-center h-[100dvh] bg-gray-100 sm:p-4">
+
+  <div id="phone" class="w-full max-w-[400px] h-full sm:h-[850px] relative overflow-hidden shadow-2xl sm:rounded-[32px] sm:border-[8px] sm:border-white bg-[#F2F4F7]">
+
+    <!-- ═══════════════ PAGE: 登录 ═══════════════ -->
+    <div id="page-login" class="page active w-full h-full flex-col">
+      <!-- 背景渐变 -->
+      <div class="absolute top-0 left-0 w-full h-80 profile-header pointer-events-none"></div>
+
+      <div class="flex-1 overflow-y-auto hide-scroll relative z-10 px-6 pt-14 pb-10">
+        <!-- Logo 区 -->
+        <div class="text-center mb-10 fade-up">
+          <div class="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#5D5DF0] to-[#7C3AED] flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span style="font-size:38px">🐾</span>
+          </div>
+          <h1 class="text-[26px] font-bold text-[#1F2937]">宠物阿福</h1>
+          <p class="text-gray-400 text-[14px] mt-1">AI 宠物健康管家</p>
+        </div>
+
+        <!-- 登录卡片 -->
+        <div class="glass rounded-3xl p-6 fade-up">
+          <h2 class="text-[20px] font-bold text-[#1F2937] mb-6">欢迎回来</h2>
+
+          <div class="mb-4">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">手机号</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-mobile-screen"></i></span>
+              <input id="login-phone" type="tel" maxlength="11" placeholder="请输入手机号" class="auth-input pl-10">
+            </div>
+            <div class="err-msg" id="login-phone-err"></div>
+          </div>
+
+          <div class="mb-6">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">密码</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+              <input id="login-pwd" type="password" placeholder="请输入密码" class="auth-input pl-10" onkeydown="if(event.key==='Enter')doLogin()">
+              <button onclick="togglePwd('login-pwd')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-regular fa-eye" id="login-pwd-eye"></i>
+              </button>
+            </div>
+            <div class="err-msg" id="login-pwd-err"></div>
+          </div>
+
+          <div class="err-msg show text-center mb-3" id="login-global-err" style="display:none"></div>
+
+          <button id="login-btn" onclick="doLogin()" class="btn-primary mb-4">
+            <i class="fa-solid fa-right-to-bracket mr-2"></i>登 录
+          </button>
+
+          <div class="text-center text-[14px] text-gray-500">
+            还没有账号？
+            <span onclick="showPage('page-register')" class="text-[#5D5DF0] font-semibold cursor-pointer hover:underline">立即注册</span>
+          </div>
+        </div>
+
+        <!-- 社交登录占位 -->
+        <div class="flex items-center gap-3 my-6">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-gray-400 text-[12px]">其他登录方式</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <div class="flex justify-center">
+          <div class="w-12 h-12 rounded-full bg-[#07C160] flex items-center justify-center shadow-md cursor-pointer" title="微信登录（开发中）">
+            <i class="fa-brands fa-weixin text-white text-2xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ PAGE: 注册 ═══════════════ -->
+    <div id="page-register" class="page w-full h-full flex-col">
+      <div class="absolute top-0 left-0 w-full h-80 profile-header pointer-events-none"></div>
+
+      <!-- 顶部返回 -->
+      <div class="absolute top-0 left-0 right-0 pt-14 px-5 z-20 flex items-center">
+        <button onclick="showPage('page-login')" class="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center shadow-sm">
+          <i class="fa-solid fa-arrow-left text-[#2D336B]"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto hide-scroll relative z-10 px-6 pt-28 pb-10">
+        <div class="glass rounded-3xl p-6 fade-up">
+          <h2 class="text-[20px] font-bold text-[#1F2937] mb-1">创建账号</h2>
+          <p class="text-[13px] text-gray-400 mb-6">注册后可管理宠物健康档案</p>
+
+          <div class="mb-4">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">昵称</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-user"></i></span>
+              <input id="reg-name" type="text" maxlength="20" placeholder="给自己起个昵称" class="auth-input pl-10">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">手机号</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-mobile-screen"></i></span>
+              <input id="reg-phone" type="tel" maxlength="11" placeholder="请输入手机号" class="auth-input pl-10">
+            </div>
+            <div class="err-msg" id="reg-phone-err"></div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">密码</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+              <input id="reg-pwd" type="password" placeholder="至少 6 位密码" class="auth-input pl-10">
+              <button onclick="togglePwd('reg-pwd')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-regular fa-eye" id="reg-pwd-eye"></i>
+              </button>
+            </div>
+            <div class="err-msg" id="reg-pwd-err"></div>
+          </div>
+
+          <div class="mb-6">
+            <label class="text-[13px] font-medium text-gray-500 mb-1.5 block">确认密码</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+              <input id="reg-pwd2" type="password" placeholder="再次输入密码" class="auth-input pl-10" onkeydown="if(event.key==='Enter')doRegister()">
+            </div>
+            <div class="err-msg" id="reg-pwd2-err"></div>
+          </div>
+
+          <div class="err-msg show text-center mb-3" id="reg-global-err" style="display:none"></div>
+
+          <button id="reg-btn" onclick="doRegister()" class="btn-primary mb-4">
+            <i class="fa-solid fa-user-plus mr-2"></i>注 册
+          </button>
+
+          <div class="text-center text-[14px] text-gray-500">
+            已有账号？
+            <span onclick="showPage('page-login')" class="text-[#5D5DF0] font-semibold cursor-pointer hover:underline">立即登录</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ PAGE: 个人主页 ═══════════════ -->
+    <div id="page-profile" class="page w-full h-full flex-col">
+      <div class="absolute top-0 left-0 w-full h-72 profile-header z-0 pointer-events-none"></div>
+
+      <!-- 状态栏 -->
+      <div class="flex justify-between items-center px-6 pt-4 pb-2 text-[14px] font-medium z-10 relative">
+        <div id="profile-time">--:--</div>
+        <div class="flex gap-1.5 items-center">
+          <i class="fa-solid fa-signal text-xs"></i>
+          <i class="fa-solid fa-wifi text-xs"></i>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto hide-scroll z-10 pb-20">
+        <!-- 用户信息头部 -->
+        <div class="px-5 pt-2 pb-5 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden border-[3px] border-white shadow-md bg-gradient-to-br from-[#5D5DF0] to-[#7C3AED] flex items-center justify-center">
+              <i class="fa-solid fa-user text-white text-2xl"></i>
+            </div>
+            <div>
+              <div class="text-[18px] font-bold text-gray-900 mb-0.5" id="profile-name">加载中…</div>
+              <div class="text-[12px] text-gray-500 flex items-center gap-1">
+                <span id="profile-phone">--</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center gap-1 cursor-pointer">
+              <i class="fa-regular fa-bell text-[#2D336B] text-xl"></i>
+              <span class="text-[11px] text-gray-600">消息</span>
+            </div>
+            <div onclick="doLogout()" class="flex flex-col items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-right-from-bracket text-[#2D336B] text-xl"></i>
+              <span class="text-[11px] text-gray-600">退出</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 两个功能卡片 -->
+        <div class="px-4 flex gap-3 mb-5">
+          <div class="glass flex-1 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-white transition">
+            <div class="w-11 h-11 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg flex-shrink-0">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+              <div class="text-[15px] font-bold">医疗保障</div>
+              <div class="text-[11px] text-gray-500 mt-0.5">医保商保服务</div>
+            </div>
+          </div>
+          <div class="glass flex-1 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-white transition">
+            <div class="w-11 h-11 rounded-full bg-purple-600 text-white flex items-center justify-center text-lg flex-shrink-0">
+              <i class="fa-solid fa-file-medical"></i>
+            </div>
+            <div>
+              <div class="text-[15px] font-bold">健康档案</div>
+              <div class="text-[11px] text-gray-500 mt-0.5">家人健康管理</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 白色主面板 -->
+        <div class="bg-white rounded-t-3xl shadow-sm pt-6">
+          <!-- 宠物列表 -->
+          <div class="px-5 mb-5 border-b border-gray-100 pb-5">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-[17px] font-bold">我的宠物</h2>
+              <span onclick="openAddPet()" class="text-[13px] text-[#5D5DF0] cursor-pointer font-medium hover:underline">+ 添加</span>
+            </div>
+            <div id="pet-list" class="flex flex-col gap-3"></div>
+          </div>
+
+          <!-- 快捷入口 -->
+          <div class="px-5 mb-5">
+            <h2 class="text-[17px] font-bold mb-4">常用功能</h2>
+            <div class="space-y-2">
+              <a href="pet_doctor.html" class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition no-underline">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-[#5D5DF0]"><i class="fa-solid fa-comment-medical"></i></div>
+                  <span class="text-[15px] text-gray-800 font-medium">AI 问诊</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300"></i>
+              </a>
+              <a href="ai_camera.html" class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition no-underline">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600"><i class="fa-solid fa-camera"></i></div>
+                  <span class="text-[15px] text-gray-800 font-medium">拍照识别</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300"></i>
+              </a>
+              <a href="doctor_directory.html" class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition no-underline">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-hospital"></i></div>
+                  <span class="text-[15px] text-gray-800 font-medium">附近医院</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- 对话记录 -->
+          <div class="px-5 pb-10">
+            <h2 class="text-[17px] font-bold mb-4">对话记录</h2>
+            <div style="background:#f5f5f5;margin:0 -20px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+              <div style="font-size:15px;color:#333">AI 诊室</div>
+              <div style="font-size:12px;color:#aaa" id="chat-time"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部 Tab 占位 -->
+      <div class="absolute bottom-0 left-0 w-full h-14 bg-white flex items-center justify-around border-t border-gray-100 z-20">
+        <div class="flex flex-col items-center gap-0.5 cursor-pointer">
+          <i class="fa-solid fa-house text-[#5D5DF0] text-lg"></i>
+          <span class="text-[10px] text-[#5D5DF0] font-medium">首页</span>
+        </div>
+        <a href="ai_clinic_entry.html" class="flex flex-col items-center gap-0.5 cursor-pointer no-underline">
+          <i class="fa-solid fa-stethoscope text-gray-400 text-lg"></i>
+          <span class="text-[10px] text-gray-400">问诊</span>
+        </a>
+        <a href="doctor_directory.html" class="flex flex-col items-center gap-0.5 cursor-pointer no-underline">
+          <i class="fa-solid fa-location-dot text-gray-400 text-lg"></i>
+          <span class="text-[10px] text-gray-400">找医院</span>
+        </a>
+        <div class="flex flex-col items-center gap-0.5 cursor-pointer">
+          <i class="fa-solid fa-user text-gray-400 text-lg"></i>
+          <span class="text-[10px] text-gray-400">我的</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /phone frame -->
+
+  <!-- pet sheet -->
+  <div id="pet-overlay" onclick="closeAddPet()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50"></div>
+
+  <div id="pet-sheet"
+       style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+              width:100%;max-width:400px;z-index:60;background:#F4F5FF;
+              border-radius:28px 28px 0 0;padding:0 0 40px;max-height:92dvh;overflow-y:auto">
+
+    <div style="padding:16px 20px 12px;position:sticky;top:0;background:#F4F5FF;z-index:2;border-bottom:1px solid rgba(0,0,0,0.05)">
+      <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="font-size:20px;font-weight:700;color:#1F2937">添加宠物档案</h2>
+        <button id="pet-close-btn" style="background:none;border:none;font-size:26px;color:#aaa;cursor:pointer;padding:0 4px">&times;</button>
+      </div>
+    </div>
+
+    <div style="padding:20px 20px 0">
+
+      <!-- 头像 -->
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="position:relative;display:inline-block">
+          <div id="pet-avatar-preview"
+               style="width:80px;height:80px;border-radius:50%;font-size:38px;display:flex;align-items:center;justify-content:center;
+                      background:#E0E7FF;border:3px solid white;box-shadow:0 4px 14px rgba(93,93,240,0.18);overflow:hidden">
+            <span id="pet-emoji-span">&#x1F431;</span>
+            <img id="pet-avatar-img" style="display:none;width:100%;height:100%;object-fit:cover">
+          </div>
+          <div onclick="toggleAvatarMenu()"
+               style="position:absolute;bottom:-2px;right:-6px;width:26px;height:26px;border-radius:50%;
+                      background:#5D5DF0;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <i class="fa-solid fa-camera" style="color:white;font-size:11px"></i>
+          </div>
+        </div>
+        <div id="avatar-menu" style="display:none;flex-direction:row;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+          <label style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:white;border-radius:20px;cursor:pointer;border:1px solid #e5e7eb;font-size:12px;color:#374151">
+            <i class="fa-solid fa-camera" style="color:#5D5DF0"></i>拍照
+            <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleAvatarUpload(this)">
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:white;border-radius:20px;cursor:pointer;border:1px solid #e5e7eb;font-size:12px;color:#374151">
+            <i class="fa-regular fa-image" style="color:#5D5DF0"></i>相册
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+          </label>
+          <button onclick="cyclePetIcon()"
+                  style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:white;border-radius:20px;border:1px solid #e5e7eb;cursor:pointer;font-size:12px;color:#374151">
+            &#x1F43E; 切换图标
+          </button>
+        </div>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:6px">点相机图标选头像</div>
+      </div>
+
+      <!-- 种类 -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:8px">宠物种类 *</label>
+        <div style="display:flex;gap:8px">
+          <button id="sp-cat" onclick="selectSpecies('cat')" style="flex:1;padding:10px 6px;border-radius:12px;border:2px solid #5D5DF0;background:#EEF2FF;font-size:13px;font-weight:600;color:#5D5DF0;cursor:pointer">&#x1F431; 猫咪</button>
+          <button id="sp-dog" onclick="selectSpecies('dog')" style="flex:1;padding:10px 6px;border-radius:12px;border:2px solid #e5e7eb;background:white;font-size:13px;color:#6B7280;cursor:pointer">&#x1F436; 狗狗</button>
+          <button id="sp-other" onclick="selectSpecies('other')" style="flex:1;padding:10px 6px;border-radius:12px;border:2px solid #e5e7eb;background:white;font-size:13px;color:#6B7280;cursor:pointer">&#x1F43E; 其他</button>
+        </div>
+      </div>
+
+      <!-- 名字 -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">宠物名字 *</label>
+        <input id="pet-name" type="text" maxlength="20" placeholder="如：小橘、旺财"
+          style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;background:#fff;box-sizing:border-box"
+          onfocus="this.style.borderColor='#5D5DF0'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
+
+      <!-- 品种 -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">品种</label>
+        <select id="pet-breed" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;background:#fff;color:#374151;box-sizing:border-box"></select>
+      </div>
+
+      <!-- 性别 -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:8px">性别</label>
+        <div style="display:flex;gap:8px">
+          <button id="gd-male" onclick="selectGender('male')" style="flex:1;padding:9px;border-radius:12px;border:2px solid #e5e7eb;background:white;font-size:14px;color:#6B7280;cursor:pointer">&#x2642; 公</button>
+          <button id="gd-female" onclick="selectGender('female')" style="flex:1;padding:9px;border-radius:12px;border:2px solid #e5e7eb;background:white;font-size:14px;color:#6B7280;cursor:pointer">&#x2640; 母</button>
+          <button id="gd-unknown" onclick="selectGender('unknown')" style="flex:1;padding:9px;border-radius:12px;border:2px solid #5D5DF0;background:#EEF2FF;font-size:14px;color:#5D5DF0;font-weight:600;cursor:pointer">未知</button>
+        </div>
+      </div>
+
+      <!-- 出生日期 -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">出生日期</label>
+        <input id="pet-birth" type="date"
+          style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;background:#fff;box-sizing:border-box"
+          onfocus="this.style.borderColor='#5D5DF0'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
+
+      <!-- 体重 -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin-bottom:6px">体重（kg）</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input id="pet-weight" type="number" min="0.1" max="99" step="0.1" placeholder="如：4.5"
+            style="flex:1;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;background:#fff"
+            onfocus="this.style.borderColor='#5D5DF0'" onblur="this.style.borderColor='#e5e7eb'">
+          <span style="color:#9CA3AF;font-size:14px">kg</span>
+        </div>
+      </div>
+
+      <!-- 绝育 -->
+      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;background:white;padding:14px;border-radius:14px;border:1px solid #e5e7eb">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:#374151">已绝育 / 已驱虫</div>
+          <div style="font-size:12px;color:#9CA3AF;margin-top:2px">绝育可降低部分疾病风险</div>
+        </div>
+        <div id="neutered-track" onclick="toggleNeutered()"
+             style="width:48px;height:26px;border-radius:13px;background:#e5e7eb;cursor:pointer;position:relative;transition:background .25s;flex-shrink:0">
+          <div id="neutered-thumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></div>
+        </div>
+        <input id="pet-neutered" type="checkbox" style="display:none">
+      </div>
+
+      <!-- 疾病 -->
+      <div style="margin-bottom:16px;background:white;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden">
+        <div style="padding:14px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:15px;font-weight:600;color:#374151">宠物有已知疾病？</div>
+            <div style="font-size:12px;color:#9CA3AF;margin-top:2px">可上传病历和照片</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button id="dis-no" onclick="selectDisease('no')" style="padding:6px 16px;border-radius:20px;border:2px solid #5D5DF0;background:#EEF2FF;font-size:13px;color:#5D5DF0;font-weight:600;cursor:pointer">无</button>
+            <button id="dis-yes" onclick="selectDisease('yes')" style="padding:6px 16px;border-radius:20px;border:2px solid #e5e7eb;background:white;font-size:13px;color:#6B7280;cursor:pointer">有</button>
+          </div>
+        </div>
+        <div id="disease-panel" style="display:none;padding:0 14px 16px;border-top:1px solid #f3f4f6">
+          <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin:12px 0 6px">疾病名称 / 描述</label>
+          <textarea id="disease-desc" rows="2" placeholder="如：慢性肾病、心脏病、骨折术后…"
+            style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:#fafafa;box-sizing:border-box;resize:none"
+            onfocus="this.style.borderColor='#5D5DF0'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+          <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin:12px 0 8px">患病照片 <span style="font-weight:400;color:#9CA3AF">（最多9张）</span></label>
+          <div id="dis-img-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <label id="dis-img-add-btn" style="width:66px;height:66px;border-radius:12px;border:2px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;font-size:11px;color:#9CA3AF;gap:3px;flex-shrink:0">
+              <i class="fa-solid fa-plus" style="font-size:18px"></i>添加
+              <input type="file" accept="image/*" multiple style="display:none" onchange="handleDiseaseImgs(this)">
+            </label>
+          </div>
+          <label style="font-size:13px;font-weight:600;color:#6B7280;display:block;margin:12px 0 8px">病历文件 <span style="font-weight:400;color:#9CA3AF">（PDF/图片）</span></label>
+          <label style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fafafa;border:2px dashed #d1d5db;border-radius:12px;cursor:pointer;font-size:13px;color:#6B7280">
+            <i class="fa-solid fa-file-medical" style="color:#5D5DF0;font-size:16px"></i>
+            <span id="med-file-label">点击选择文件</span>
+            <input type="file" accept=".pdf,image/*" multiple style="display:none" onchange="handleMedFile(this)">
+          </label>
+        </div>
+      </div>
+
+      <div id="pet-err" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none"></div>
+      <button id="pet-submit-btn" onclick="doAddPet()"
+        style="width:100%;padding:15px;border-radius:50px;margin-bottom:6px;background:linear-gradient(135deg,#5D5DF0,#7C3AED);color:white;font-size:16px;font-weight:600;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(93,93,240,0.35)">&#x1F43E; 保存宠物档案</button>
+    </div>
+  </div><!-- /pet-sheet -->
+
+
+
+  <script>
+    const API = 'http://localhost:8000/api/v1'
+
+    // ── 页面切换 ──
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+      document.getElementById(id).classList.add('active')
+    }
+
+    // ── 时间 ──
+    function updateTime() {
+      const now = new Date()
+      const t = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      document.getElementById('profile-time').textContent = t
+      document.getElementById('chat-time').textContent = t
+    }
+    updateTime(); setInterval(updateTime, 30000)
+
+    // ── 显示/隐藏密码 ──
+    function togglePwd(inputId) {
+      const el = document.getElementById(inputId)
+      const eye = document.getElementById(inputId + '-eye')
+      if (el.type === 'password') {
+        el.type = 'text'
+        eye.className = 'fa-regular fa-eye-slash'
+      } else {
+        el.type = 'password'
+        eye.className = 'fa-regular fa-eye'
+      }
+    }
+
+    // ── 错误提示 ──
+    function showErr(id, msg) {
+      const el = document.getElementById(id)
+      el.textContent = msg
+      el.style.display = msg ? 'block' : 'none'
+    }
+    function clearErrors(...ids) { ids.forEach(id => showErr(id, '')) }
+
+    // ── 登录 ──
+    async function doLogin() {
+      const phone = document.getElementById('login-phone').value.trim()
+      const pwd   = document.getElementById('login-pwd').value
+      clearErrors('login-phone-err', 'login-pwd-err', 'login-global-err')
+
+      if (!phone) return showErr('login-phone-err', '请输入手机号')
+      if (!pwd)   return showErr('login-pwd-err', '请输入密码')
+
+      const btn = document.getElementById('login-btn')
+      btn.disabled = true; btn.textContent = '登录中…'
+
+      try {
+        const res = await fetch(`${API}/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, password: pwd })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.detail || '登录失败')
+
+        saveToken(data)
+        loadProfile(data)
+      } catch (e) {
+        showErr('login-global-err', e.message)
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i>登 录'
+      }
+    }
+
+    // ── 注册 ──
+    async function doRegister() {
+      const name  = document.getElementById('reg-name').value.trim()
+      const phone = document.getElementById('reg-phone').value.trim()
+      const pwd   = document.getElementById('reg-pwd').value
+      const pwd2  = document.getElementById('reg-pwd2').value
+      clearErrors('reg-phone-err', 'reg-pwd-err', 'reg-pwd2-err', 'reg-global-err')
+
+      if (!phone) return showErr('reg-phone-err', '请输入手机号')
+      if (!/^1[3-9]\d{9}$/.test(phone)) return showErr('reg-phone-err', '手机号格式不正确')
+      if (!pwd)   return showErr('reg-pwd-err', '请输入密码')
+      if (pwd.length < 6) return showErr('reg-pwd-err', '密码至少 6 位')
+      if (pwd !== pwd2)   return showErr('reg-pwd2-err', '两次密码不一致')
+
+      const btn = document.getElementById('reg-btn')
+      btn.disabled = true; btn.textContent = '注册中…'
+
+      try {
+        const res = await fetch(`${API}/users/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, password: pwd, nickname: name })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.detail || '注册失败')
+
+        saveToken(data)
+        loadProfile(data)
+      } catch (e) {
+        showErr('reg-global-err', e.message)
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus mr-2"></i>注 册'
+      }
+    }
+
+    // ── 保存 Token ──
+    function saveToken(data) {
+      localStorage.setItem('paf_token', data.access_token)
+      localStorage.setItem('paf_user', JSON.stringify({
+        id: data.user_id,
+        nickname: data.nickname,
+        phone: data.phone,
+      }))
+    }
+
+    // ── 加载个人信息页 ──
+    function loadProfile(data) {
+      document.getElementById('profile-name').textContent = data.nickname || '宠物主人'
+      document.getElementById('profile-phone').textContent = data.phone
+        ? data.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+        : ''
+      showPage('page-profile')
+      loadPets()   // 登录成功后自动加载宠物列表
+    }
+
+    // ── 退出登录 ──
+    function doLogout() {
+      localStorage.removeItem('paf_token')
+      localStorage.removeItem('paf_user')
+      showPage('page-login')
+    }
+
+    // ── 自动登录（Token 未过期时） ──
+    async function autoLogin() {
+      const token = localStorage.getItem('paf_token')
+      const cached = localStorage.getItem('paf_user')
+      if (!token) return
+
+      if (cached) {
+        loadProfile(JSON.parse(cached))
+        return
+      }
+
+      try {
+        const res = await fetch(`${API}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (!res.ok) throw new Error()
+        const data = await res.json()
+        localStorage.setItem('paf_user', JSON.stringify({ id:data.id, nickname:data.nickname, phone:data.phone }))
+        loadProfile({ nickname: data.nickname, phone: data.phone })
+      } catch {
+        doLogout()
+      }
+    }
+
+    // ═══════════════ 宠物 JS ═══════════════
+    const CAT_BREEDS = ['不知道/混血','橘猫','英短','美短','折耳猫','布偶猫','波斯猫','暹罗猫','缅因猫','孟加拉猫','阿比西尼亚猫','其他']
+    const DOG_BREEDS = ['不知道/混血','金毛','拉布拉多','泰迪/贵宾','比熊','柯基','边牧','哈士奇','萨摩耶','法斗','柴犬','博美','马尔济斯','其他']
+    const OTHER_BREEDS = ['不知道','兔子','仓鼠','鸟类','爬行类','其他']
+    const PET_ICONS = ['🐱','🐶','🐰','🐹','🦜','🐢','🦔','🐠']
+    let selectedSpecies = 'cat', selectedGender = 'unknown', petIconIdx = 0
+    let hasDiseaseSelected = false, petAvatarDataUrl = null
+    const diseaseImgFiles = []
+
+    function _setBtn(id, active) {
+      const el = document.getElementById(id); if (!el) return
+      el.style.border = active ? '2px solid #5D5DF0' : '2px solid #e5e7eb'
+      el.style.background = active ? '#EEF2FF' : 'white'
+      el.style.color = active ? '#5D5DF0' : '#6B7280'
+      el.style.fontWeight = active ? '600' : '400'
+    }
+
+    function updateBreeds(species) {
+      const sel = document.getElementById('pet-breed'); if (!sel) return
+      const breeds = species === 'cat' ? CAT_BREEDS : species === 'dog' ? DOG_BREEDS : OTHER_BREEDS
+      sel.innerHTML = breeds.map(b => `<option value="${b}">${b}</option>`).join('')
+    }
+
+    function selectSpecies(val) {
+      selectedSpecies = val
+      ;['cat','dog','other'].forEach(s => _setBtn('sp-'+s, s === val))
+      updateBreeds(val)
+      petIconIdx = val === 'cat' ? 0 : val === 'dog' ? 1 : 2
+      if (!petAvatarDataUrl) {
+        const sp = document.getElementById('pet-emoji-span'); if (sp) sp.textContent = PET_ICONS[petIconIdx]
+      }
+    }
+
+    function selectGender(val) {
+      selectedGender = val
+      ;['male','female','unknown'].forEach(g => _setBtn('gd-'+g, g === val))
+    }
+
+    function selectDisease(val) {
+      hasDiseaseSelected = val === 'yes'
+      _setBtn('dis-no', !hasDiseaseSelected)
+      _setBtn('dis-yes', hasDiseaseSelected)
+      const p = document.getElementById('disease-panel')
+      if (p) p.style.display = hasDiseaseSelected ? 'block' : 'none'
+    }
+
+    function cyclePetIcon() {
+      petIconIdx = (petIconIdx + 1) % PET_ICONS.length
+      const sp = document.getElementById('pet-emoji-span'); if (sp) sp.textContent = PET_ICONS[petIconIdx]
+      const img = document.getElementById('pet-avatar-img'); if (img) img.style.display = 'none'
+      const sp2 = document.getElementById('pet-emoji-span'); if (sp2) sp2.style.display = ''
+      petAvatarDataUrl = null
+    }
+
+    function toggleAvatarMenu() {
+      const m = document.getElementById('avatar-menu'); if (!m) return
+      m.style.display = m.style.display === 'flex' ? 'none' : 'flex'
+    }
+
+    function handleAvatarUpload(input) {
+      if (!input.files || !input.files[0]) return
+      const reader = new FileReader()
+      reader.onload = e => {
+        petAvatarDataUrl = e.target.result
+        const img = document.getElementById('pet-avatar-img')
+        const sp = document.getElementById('pet-emoji-span')
+        if (img) { img.src = petAvatarDataUrl; img.style.display = 'block' }
+        if (sp) sp.style.display = 'none'
+        const m = document.getElementById('avatar-menu'); if (m) m.style.display = 'none'
+      }
+      reader.readAsDataURL(input.files[0])
+    }
+
+    function toggleNeutered() {
+      const cb = document.getElementById('pet-neutered'); cb.checked = !cb.checked
+      const track = document.getElementById('neutered-track')
+      const thumb = document.getElementById('neutered-thumb')
+      if (track) track.style.background = cb.checked ? '#5D5DF0' : '#e5e7eb'
+      if (thumb) thumb.style.left = cb.checked ? '25px' : '3px'
+    }
+
+    function handleDiseaseImgs(input) {
+      const row = document.getElementById('dis-img-row')
+      const addBtn = document.getElementById('dis-img-add-btn')
+      if (!row || !input.files) return
+      Array.from(input.files).forEach(f => {
+        if (diseaseImgFiles.length >= 9) return
+        diseaseImgFiles.push(f)
+        const reader = new FileReader()
+        reader.onload = e => {
+          const thumb = document.createElement('div')
+          thumb.style.cssText = 'width:66px;height:66px;border-radius:12px;overflow:hidden;flex-shrink:0'
+          const img = document.createElement('img')
+          img.src = e.target.result; img.style.cssText = 'width:100%;height:100%;object-fit:cover'
+          thumb.appendChild(img)
+          if (addBtn) row.insertBefore(thumb, addBtn)
+          else row.appendChild(thumb)
+          if (diseaseImgFiles.length >= 9 && addBtn) addBtn.style.display = 'none'
+        }
+        reader.readAsDataURL(f)
+      })
+    }
+
+    function handleMedFile(input) {
+      const lbl = document.getElementById('med-file-label')
+      if (!lbl || !input.files || !input.files.length) return
+      lbl.textContent = Array.from(input.files).map(f => f.name).join('、')
+    }
+
+    let currentPetId = null   // null = 新增模式, number = 编辑模式
+
+    function openAddPet() {
+      currentPetId = null
+      _openPetSheet('添加宠物档案', null)
+    }
+
+    function openEditPet(pet) {
+      currentPetId = pet.id
+      _openPetSheet('编辑宠物档案', pet)
+    }
+
+    function _openPetSheet(title, pet) {
+      selectedSpecies = pet ? pet.species : 'cat'
+      selectedGender = pet ? pet.gender : 'unknown'
+      petIconIdx = selectedSpecies === 'cat' ? 0 : selectedSpecies === 'dog' ? 1 : 2
+      hasDiseaseSelected = false
+      petAvatarDataUrl = null
+      diseaseImgFiles.length = 0
+
+      // 标题
+      const titleEl = document.querySelector('#pet-sheet h2')
+      if (titleEl) titleEl.textContent = title
+
+      // 重置/填充字段
+      const nameEl = document.getElementById('pet-name')
+      const birthEl = document.getElementById('pet-birth')
+      const weightEl = document.getElementById('pet-weight')
+      const descEl = document.getElementById('disease-desc')
+      if (nameEl)   nameEl.value   = pet ? pet.name : ''
+      if (birthEl)  { birthEl.max = new Date().toISOString().slice(0,10); birthEl.value = pet && pet.birth_date ? pet.birth_date.slice(0,10) : '' }
+      if (weightEl) weightEl.value = pet && pet.weight_kg ? pet.weight_kg : ''
+      if (descEl)   descEl.value   = ''
+
+      // 绝育开关
+      const cb = document.getElementById('pet-neutered')
+      const track = document.getElementById('neutered-track')
+      const thumb = document.getElementById('neutered-thumb')
+      const isNeutered = pet ? pet.is_neutered : false
+      if (cb) cb.checked = isNeutered
+      if (track) track.style.background = isNeutered ? '#5D5DF0' : '#e5e7eb'
+      if (thumb) thumb.style.left = isNeutered ? '25px' : '3px'
+
+      // 头像
+      const avatImg = document.getElementById('pet-avatar-img')
+      const emojiSpan = document.getElementById('pet-emoji-span')
+      if (avatImg) { avatImg.style.display = 'none'; avatImg.src = '' }
+      if (emojiSpan) { emojiSpan.style.display = ''; emojiSpan.textContent = PET_ICONS[petIconIdx] }
+      const avatMenu = document.getElementById('avatar-menu')
+      if (avatMenu) avatMenu.style.display = 'none'
+
+      // 疾病图片
+      const row = document.getElementById('dis-img-row')
+      const addBtn = document.getElementById('dis-img-add-btn')
+      if (row && addBtn) { row.innerHTML = ''; row.appendChild(addBtn); addBtn.style.display = '' }
+      const lbl = document.getElementById('med-file-label')
+      if (lbl) lbl.textContent = '点击选择文件'
+
+      const errEl = document.getElementById('pet-err')
+      if (errEl) errEl.style.display = 'none'
+
+      selectSpecies(selectedSpecies)
+      selectGender(selectedGender)
+      selectDisease('no')
+
+      // 编辑模式：更新品种选中值（在selectSpecies之后设置）
+      if (pet && pet.breed) {
+        const breedSel = document.getElementById('pet-breed')
+        if (breedSel) {
+          // 找到匹配项
+          const opt = Array.from(breedSel.options).find(o => o.value === pet.breed)
+          if (opt) breedSel.value = pet.breed
+          else { const o = new Option(pet.breed, pet.breed); breedSel.add(o); breedSel.value = pet.breed }
+        }
+      }
+
+      // 保存按钮文字
+      const btn = document.getElementById('pet-submit-btn')
+      if (btn) btn.textContent = pet ? '💾 保存修改' : '🐾 保存宠物档案'
+
+      document.getElementById('pet-close-btn').onclick = closeAddPet
+      document.getElementById('pet-overlay').style.display = 'block'
+      document.getElementById('pet-sheet').style.display = 'block'
+      document.getElementById('pet-sheet').scrollTop = 0
+    }
+
+    function closeAddPet() {
+      document.getElementById('pet-overlay').style.display = 'none'
+      document.getElementById('pet-sheet').style.display = 'none'
+    }
+
+    async function doAddPet() {
+      const name = document.getElementById('pet-name').value.trim()
+      const breed = document.getElementById('pet-breed').value
+      const birth = document.getElementById('pet-birth').value
+      const weight = document.getElementById('pet-weight').value
+      const neutered = document.getElementById('pet-neutered').checked
+      const errEl = document.getElementById('pet-err')
+      errEl.style.display = 'none'
+
+      if (!name) { errEl.textContent = '请填写宠物名字'; errEl.style.display = 'block'; return }
+      const token = localStorage.getItem('paf_token')
+      if (!token) { errEl.textContent = '请先登录'; errEl.style.display = 'block'; return }
+
+      const btn = document.getElementById('pet-submit-btn')
+      btn.disabled = true
+      btn.textContent = '保存中…'
+
+      const body = {
+        name,
+        species: selectedSpecies,
+        breed: (breed === '不知道/混血' || breed === '不知道') ? null : breed,
+        gender: selectedGender,
+        birth_date: birth || null,
+        weight_kg: weight ? parseFloat(weight) : null,
+        is_neutered: neutered,
+      }
+
+      const url = currentPetId ? `${API}/pets/${currentPetId}` : `${API}/pets/`
+      const method = currentPetId ? 'PATCH' : 'POST'
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.detail || '保存失败')
+        closeAddPet()
+        await loadPets()
+      } catch(e) {
+        errEl.textContent = e.message; errEl.style.display = 'block'
+      } finally {
+        btn.disabled = false
+        btn.textContent = currentPetId ? '💾 保存修改' : '🐾 保存宠物档案'
+      }
+    }
+
+    async function loadPets() {
+      const token = localStorage.getItem('paf_token')
+      const list = document.getElementById('pet-list')
+      if (!token || !list) return
+      try {
+        const res = await fetch(`${API}/pets/mine`, { headers: { Authorization: `Bearer ${token}` } })
+        const pets = await res.json()
+        if (!Array.isArray(pets) || pets.length === 0) {
+          list.innerHTML = `<div style="text-align:center;padding:16px 0;color:#9CA3AF"><div style="font-size:32px;margin-bottom:6px">🐾</div><div style="font-size:14px">还没有宠物，点 + 添加</div></div>`
+          return
+        }
+        const sIcon = {cat:'🐱',dog:'🐶',other:'🐾'}
+        const gLabel = {male:'♂ 公',female:'♀ 母',unknown:''}
+        // 把 pets 存到全局，编辑时用
+        window._petList = pets
+        list.innerHTML = pets.map((p,i) => {
+          const age = p.birth_date ? Math.floor((Date.now()-new Date(p.birth_date))/(365.25*864e5))+'岁' : ''
+          const tags = [p.breed&&p.breed!=='null'?p.breed:'', gLabel[p.gender]||'', age, p.weight_kg?p.weight_kg+'kg':'', p.is_neutered?'已绝育':''].filter(Boolean).join(' · ')
+          return `<div onclick="openEditPet(window._petList[${i}])"
+            style="display:flex;align-items:center;gap:12px;background:white;padding:12px 14px;border-radius:16px;border:1px solid #e5e7eb;cursor:pointer;active:opacity:0.8">
+            <div style="width:48px;height:48px;border-radius:50%;background:#E0E7FF;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${sIcon[p.species]||'🐾'}</div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:700;color:#1F2937">${p.name}</div>
+              <div style="font-size:12px;color:#9CA3AF;margin-top:2px">${tags||'点击查看详情'}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <i class="fa-solid fa-pen-to-square" style="color:#5D5DF0;font-size:14px"></i>
+            </div>
+          </div>`
+        }).join('')
+      } catch {
+        if(list) list.innerHTML = `<div style="color:#9CA3AF;font-size:13px;text-align:center;padding:12px">加载失败</div>`
+      }
+    }
+
+    
+    // 启动时自动检测登录状态
+    autoLogin()
+  </script>
+</body>
+</html>

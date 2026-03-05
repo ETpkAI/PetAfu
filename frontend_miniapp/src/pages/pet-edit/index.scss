@@ -1,0 +1,97 @@
+.pet-edit {
+  min-height: 100vh;
+  background: #f0f7f0;
+  padding-bottom: 40px;
+}
+
+.pe-header {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  padding: 50px 24px 24px;
+  border-radius: 0 0 28px 28px;
+}
+
+.pe-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+// 表单卡片
+.form-card {
+  background: #fff;
+  border-radius: 20px;
+  margin: 16px 12px;
+  padding: 8px 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.form-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+  width: 80px;
+}
+
+.form-input {
+  flex: 1;
+  text-align: right;
+  font-size: 15px;
+  color: #555;
+}
+
+.picker-text {
+  font-size: 15px;
+  color: #555;
+}
+
+// 按钮区
+.btn-area {
+  padding: 0 12px;
+}
+
+.save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  border-radius: 14px;
+  padding: 14px 0;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.35);
+  margin-bottom: 12px;
+
+  &:active { opacity: 0.85; }
+  &.disabled { opacity: 0.5; pointer-events: none; }
+}
+
+.save-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.delete-btn {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 0;
+  text-align: center;
+  border: 1px solid #e53935;
+}
+
+.delete-text {
+  color: #e53935;
+  font-size: 14px;
+  font-weight: 600;
+}

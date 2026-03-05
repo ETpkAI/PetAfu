@@ -1,0 +1,157 @@
+.diary {
+  min-height: 100vh;
+  background: #f0f7f0;
+  padding-bottom: 40px;
+}
+
+.diary-header {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  padding: 50px 24px 24px;
+  border-radius: 0 0 28px 28px;
+}
+
+.diary-title {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.diary-sub {
+  display: block;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+}
+
+// 打卡卡片
+.diary-card {
+  background: #fff;
+  border-radius: 20px;
+  margin: 16px 12px 0;
+  padding: 20px 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.score-section {
+  margin-bottom: 20px;
+}
+
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.score-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.score-value {
+  font-size: 14px;
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.stool-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 16px;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.notes-input {
+  width: 100%;
+  min-height: 80px;
+  background: #f8f8f8;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  border-radius: 14px;
+  padding: 14px 0;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.35);
+
+  &:active {
+    opacity: 0.85;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.submit-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+// 历史记录
+.history-section {
+  background: #fff;
+  border-radius: 20px;
+  margin: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.history-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+}
+
+.history-toggle {
+  font-size: 12px;
+  color: #4CAF50;
+}
+
+.history-item {
+  padding: 10px 12px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.history-date {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.history-scores {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #555;
+}
+
+.history-notes {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}

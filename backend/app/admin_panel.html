@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>宠物阿福 · 管理员面板</title>
+    <style>
+      :root {
+        --green: #4caf50;
+        --green-dark: #2e7d32;
+        --green-light: #e8f5e9;
+        --surface: #fff;
+        --bg: #f0f7f0;
+        --text: #1a1a1a;
+        --muted: #757575;
+        --border: #e0e0e0;
+        --danger: #ef5350;
+        --warning: #ff9800;
+        --info: #2196f3;
+        --radius: 16px;
+        --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      /* ── 登录页 ── */
+      #login-view {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(
+          135deg,
+          #1b5e20 0%,
+          #4caf50 60%,
+          #a5d6a7 100%
+        );
+      }
+
+      .login-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 48px 40px;
+        width: 400px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.4s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(24px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .login-logo {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .login-logo .paw {
+        font-size: 52px;
+      }
+      .login-logo h1 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--green-dark);
+        margin-top: 8px;
+      }
+      .login-logo p {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .field {
+        margin-bottom: 20px;
+      }
+      .field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .field input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        font-size: 15px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .field input:focus {
+        border-color: var(--green);
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--green), var(--green-dark));
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.35);
+        margin-top: 4px;
+      }
+      .login-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.45);
+      }
+      .login-btn:active {
+        transform: translateY(0);
+      }
+
+      .login-error {
+        background: #ffebee;
+        color: var(--danger);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        margin-top: 16px;
+        display: none;
+      }
+
+      /* ── 主面板 ── */
+      #dashboard-view {
+        display: none;
+      }
+
+      /* 顶栏 */
+      .topbar {
+        background: linear-gradient(90deg, var(--green-dark), var(--green));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        height: 60px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 18px;
+      }
+      .topbar-brand span {
+        font-size: 24px;
+      }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .topbar-user {
+        font-size: 13px;
+        opacity: 0.85;
+      }
+      .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #fff;
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+      }
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      /* 容器 */
+      .main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 24px;
+      }
+
+      /* 状态指示条 */
+      .status-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--green-light);
+        border-radius: 12px;
+        padding: 10px 18px;
+        margin-bottom: 28px;
+        font-size: 13px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* 统计卡片组 */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        text-align: center;
+        transition: transform 0.2s;
+        border-top: 4px solid transparent;
+      }
+      .stat-card:hover {
+        transform: translateY(-3px);
+      }
+      .stat-card.green {
+        border-top-color: var(--green);
+      }
+      .stat-card.blue {
+        border-top-color: var(--info);
+      }
+      .stat-card.orange {
+        border-top-color: var(--warning);
+      }
+      .stat-card.red {
+        border-top-color: var(--danger);
+      }
+
+      .stat-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+      }
+      .stat-num {
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      /* 操作区 */
+      .section {
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .ops-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .op-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 18px 12px;
+        border-radius: 14px;
+        border: 2px solid var(--border);
+        background: #fafafa;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .op-btn:hover {
+        border-color: var(--green);
+        background: var(--green-light);
+        color: var(--green-dark);
+      }
+      .op-btn .icon {
+        font-size: 28px;
+      }
+
+      /* 日志区 */
+      #log-box {
+        background: #1a1a2e;
+        color: #a5d6a7;
+        border-radius: 12px;
+        padding: 16px;
+        font-family: "SF Mono", monospace;
+        font-size: 12px;
+        min-height: 120px;
+        max-height: 200px;
+        overflow-y: auto;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      /* 加载覆盖 */
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════ 登录视图 ══════════ -->
+    <div id="login-view">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="paw">🐾</div>
+          <h1>宠物阿福</h1>
+          <p>管理员控制台</p>
+        </div>
+        <div class="field">
+          <label>用户名</label>
+          <input
+            id="username"
+            type="text"
+            placeholder="admin"
+            autocomplete="username"
+          />
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            onkeydown="if (event.key === 'Enter') doLogin();"
+          />
+        </div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">
+          登 录
+        </button>
+        <div class="login-error" id="login-error"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ 仪表盘视图 ══════════ -->
+    <div id="dashboard-view">
+      <!-- 顶栏 -->
+      <div class="topbar">
+        <div class="topbar-brand"><span>🐾</span> 宠物阿福 · 管理员面板</div>
+        <div class="topbar-right">
+          <span class="topbar-user">🔑 admin</span>
+          <button class="logout-btn" onclick="doLogout()">退出登录</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <!-- 服务状态 -->
+        <div class="status-bar">
+          <div class="status-dot"></div>
+          <span>后端服务运行中 · </span>
+          <span
+            id="server-time"
+            style="color: var(--green-dark); font-weight: 600"
+          ></span>
+        </div>
+
+        <!-- 统计卡 -->
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div class="stat-icon">👥</div>
+            <div class="stat-num" id="stat-users">—</div>
+            <div class="stat-label">注册用户数</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">🐾</div>
+            <div class="stat-num" id="stat-pets">—</div>
+            <div class="stat-label">宠物档案数</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon">📔</div>
+            <div class="stat-num" id="stat-diaries">—</div>
+            <div class="stat-label">健康日记条数</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">💬</div>
+            <div class="stat-num" id="stat-posts">—</div>
+            <div class="stat-label">社区帖子数</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">🏥</div>
+            <div class="stat-num" id="stat-records">—</div>
+            <div class="stat-label">就诊记录数</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">🤖</div>
+            <div class="stat-num">Gemini</div>
+            <div class="stat-label">AI 引擎状态</div>
+          </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="section">
+          <div class="section-title">⚡ 快捷操作</div>
+          <div class="ops-grid">
+            <div class="op-btn" onclick="refreshStats()">
+              <span class="icon">🔄</span> 刷新统计
+            </div>
+            <div class="op-btn" onclick="rebuildRag()">
+              <span class="icon">📚</span> 重建知识库索引
+            </div>
+            <div class="op-btn" onclick="openDocs()">
+              <span class="icon">📖</span> API 文档
+            </div>
+            <div class="op-btn" onclick="testHealth()">
+              <span class="icon">💓</span> 健康检查
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="section">
+          <div class="section-title">📋 操作日志</div>
+          <div id="log-box">&gt; 欢迎回来，管理员。系统正常运行中。</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const BASE = window.location.origin;
+      let _token = localStorage.getItem("admin_token") || "";
+
+      function log(msg) {
+        const box = document.getElementById("log-box");
+        const ts = new Date().toLocaleTimeString("zh-CN");
+        box.textContent += `\n[${ts}] ${msg}`;
+        box.scrollTop = box.scrollHeight;
+      }
+
+      async function doLogin() {
+        const btn = document.getElementById("login-btn");
+        const err = document.getElementById("login-error");
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!username || !password) {
+          showErr("请输入用户名和密码");
+          return;
+        }
+
+        btn.innerHTML = '<span class="spinner"></span> 验证中...';
+        btn.disabled = true;
+        err.style.display = "none";
+
+        try {
+          const res = await fetch(`${BASE}/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "登录失败");
+          _token = data.access_token;
+          localStorage.setItem("admin_token", _token);
+          showDashboard();
+        } catch (e) {
+          showErr(e.message);
+        } finally {
+          btn.innerHTML = "登 录";
+          btn.disabled = false;
+        }
+      }
+
+      function showErr(msg) {
+        const err = document.getElementById("login-error");
+        err.textContent = "❌ " + msg;
+        err.style.display = "block";
+      }
+
+      function doLogout() {
+        _token = "";
+        localStorage.removeItem("admin_token");
+        document.getElementById("dashboard-view").style.display = "none";
+        document.getElementById("login-view").style.display = "flex";
+      }
+
+      async function refreshStats() {
+        log("刷新统计数据...");
+        try {
+          const res = await fetch(`${BASE}/admin/stats`, {
+            headers: { Authorization: `Bearer ${_token}` },
+          });
+          if (res.status === 401 || res.status === 403) {
+            doLogout();
+            return;
+          }
+          const d = await res.json();
+          document.getElementById("stat-users").textContent = d.users;
+          document.getElementById("stat-pets").textContent = d.pets;
+          document.getElementById("stat-diaries").textContent = d.diaries;
+          document.getElementById("stat-posts").textContent = d.posts || 0;
+          document.getElementById("stat-records").textContent = d.records || 0;
+          document.getElementById("server-time").textContent = new Date(
+            d.server_time,
+          ).toLocaleString("zh-CN");
+          log(
+            `✅ 统计更新: 用户 ${d.users} | 宠物 ${d.pets} | 日记 ${d.diaries} | 帖子 ${d.posts || 0} | 就诊 ${d.records || 0}`,
+          );
+        } catch (e) {
+          log("❌ 获取统计失败: " + e.message);
+        }
+      }
+
+      async function rebuildRag() {
+        log("⏳ 开始重建 RAG 知识库索引，请稍候...");
+        try {
+          const res = await fetch(`${BASE}/api/v1/diagnosis/rebuild-index`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${_token}` },
+          });
+          const d = await res.json();
+          log("✅ " + (d.message || JSON.stringify(d)));
+        } catch (e) {
+          log("❌ 重建失败: " + e.message);
+        }
+      }
+
+      async function testHealth() {
+        log("检查服务健康状态...");
+        const res = await fetch(`${BASE}/health`);
+        const d = await res.json();
+        log("✅ 服务状态: " + JSON.stringify(d));
+      }
+
+      function openDocs() {
+        window.open(`${BASE}/docs`, "_blank");
+      }
+
+      async function showDashboard() {
+        document.getElementById("login-view").style.display = "none";
+        document.getElementById("dashboard-view").style.display = "block";
+        log("✅ 登录成功");
+        await refreshStats();
+        // 每 30s 自动刷新
+        setInterval(refreshStats, 30000);
+      }
+
+      // 已有 token 时自动进入面板
+      if (_token) {
+        showDashboard();
+      }
+    </script>
+  </body>
+</html>

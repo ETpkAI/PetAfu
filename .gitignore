@@ -1,0 +1,34 @@
+# 后端
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+backend/chroma_db/
+backend/petafu_dev.db
+backend/uploads/
+backend/.pytest_cache/
+backend/tests/__pycache__/
+
+# 前端
+frontend_miniapp/node_modules/
+frontend_miniapp/dist/
+frontend_miniapp/.taro/
+frontend_miniapp/.swc/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 知识库大文件（PDF 原件不上传 git，只上传处理后的 md）
+knowledge_base/**/*.pdf
+
+# 其他
+*.log
+.env.local

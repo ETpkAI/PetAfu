@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>宠物医生 · 阿福</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background: linear-gradient(180deg, #e6e9fc 0%, #f0f2ff 40%, #e2e6fa 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0; padding: 0; min-height: 100vh;
+      }
+      .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+      .hide-scroll::-webkit-scrollbar { display: none; }
+
+      /* ── 聊天气泡 ── */
+      .bubble-wrap { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 14px; animation: fadeUp .25s ease; }
+      @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+      .bubble-wrap.user  { flex-direction: row-reverse; }
+      .bubble {
+        max-width: 74%;
+        padding: 11px 15px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.6;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .bubble.user { background: linear-gradient(135deg,#5D5CDE,#4F46E5); color: #fff; border-bottom-right-radius: 4px; }
+      .bubble.ai   { background: #fff; color: #2D336B; border-bottom-left-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+      .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+      .avatar.ai { border: 2px solid #e0e7ff; }
+
+      /* ── 打字指示器 ── */
+      .typing { display:flex; gap:4px; align-items:center; padding: 12px 15px; }
+      .typing span { width:6px; height:6px; border-radius:50%; background:#a5b4fc; display:inline-block; animation: blink 1.2s ease infinite; }
+      .typing span:nth-child(2) { animation-delay:.2s; }
+      .typing span:nth-child(3) { animation-delay:.4s; }
+      @keyframes blink { 0%,80%,100%{opacity:.3;transform:scale(.8);} 40%{opacity:1;transform:scale(1);} }
+
+      /* ── 侧边栏抽屉 ── */
+      #drawer-overlay {
+        display: none; position: absolute; inset: 0; z-index: 40;
+        background: rgba(0,0,0,0.45); backdrop-filter: blur(2px);
+        transition: opacity .3s; opacity: 0;
+      }
+      #drawer-overlay.open { display: block; opacity: 1; }
+      #drawer {
+        position: absolute; top: 0; left: 0; bottom: 0;
+        width: 88%; max-width: 340px; z-index: 50;
+        background: #F2F4F7;
+        transform: translateX(-100%);
+        transition: transform .32s cubic-bezier(.4,0,.2,1);
+        overflow-y: auto;
+        border-radius: 0 24px 24px 0;
+        box-shadow: 4px 0 30px rgba(0,0,0,0.15);
+      }
+      #drawer.open { transform: translateX(0); }
+      .drawer-glass { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 4px 20px rgba(0,0,0,0.03); backdrop-filter: blur(10px); }
+
+      /* ── 图片预览 ── */
+      #img-preview { display:none; position:relative; margin-bottom:8px; }
+      #img-preview img { width:80px; height:80px; object-fit:cover; border-radius:12px; border:2px solid #e0e7ff; }
+      #img-preview .remove { position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%; background:#ef4444; color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    </style>
+  </head>
+
+  <body class="flex justify-center items-center h-[100dvh] bg-gray-100 sm:p-4">
+
+    <!-- Mobile Container -->
+    <div class="w-full max-w-[400px] h-full sm:h-[850px] bg-gradient-to-b from-[#EAEBFE] via-[#F4F5FF] to-[#E3E7FA] relative overflow-hidden flex flex-col shadow-2xl sm:rounded-[32px] sm:border-[8px] sm:border-white">
+
+      <!-- ── Header ── -->
+      <div class="px-5 pt-12 pb-3 flex justify-between items-center z-10 flex-shrink-0">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="openDrawer()">
+          <i class="fa-solid fa-bars text-xl text-[#2D336B]"></i>
+          <h1 class="text-lg font-bold tracking-wider text-[#2D336B]">宠物医生</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <div onclick="clearChat()" class="w-8 h-8 rounded-full bg-blue-100/50 flex items-center justify-center text-blue-500 cursor-pointer hover:bg-blue-100 transition" title="清除对话">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <div class="px-3 py-1.5 rounded-full bg-white/60 flex items-center gap-1.5 text-sm font-medium shadow-sm border border-white cursor-pointer hover:bg-white transition">
+            <i class="fa-solid fa-paw text-[#5D5CDE]"></i> 阿福 AI
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 聊天主体 ── -->
+      <div id="chat-area" class="flex-1 overflow-y-auto hide-scroll px-4 py-2 z-10">
+        <!-- 欢迎消息 -->
+        <div class="bubble-wrap" id="welcome-bubble">
+          <img src="https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop" class="avatar ai" alt="AI">
+          <div class="bubble ai">
+            🐾 你好！我是宠物健康助手<strong>阿福</strong>。<br><br>
+            请告诉我你的宠物有什么不舒服？可以<strong>文字描述</strong>症状，也可以点击📷<strong>上传照片</strong>让我来看看～<br><br>
+            <span style="color:#888;font-size:12px">⚠️ 本服务仅供参考，病情严重请及时就医</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 底部输入区 ── -->
+      <div class="flex-shrink-0 pb-8 px-4 pt-4 z-20" style="background:linear-gradient(180deg, rgba(234,235,254,0) 0%, rgba(220,225,250,0.85) 25%, rgba(210,218,245,1) 100%);">
+        <!-- 快捷标签 -->
+        <div class="flex gap-2 overflow-x-auto hide-scroll mb-3 px-1">
+          <div onclick="quickSend('我的猫咪一直在咳嗽，该怎么办？')" class="shrink-0 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-[12px] font-medium text-[#2D336B] border border-white shadow-sm cursor-pointer hover:bg-white transition">🐱 咳嗽</div>
+          <div onclick="quickSend('狗狗食欲不振，精神很差，是生病了吗？')" class="shrink-0 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-[12px] font-medium text-[#2D336B] border border-white shadow-sm cursor-pointer hover:bg-white transition">🐶 食欲差</div>
+          <div onclick="quickSend('猫咪频繁抓耳朵，耳朵里有黑色分泌物')" class="shrink-0 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-[12px] font-medium text-[#2D336B] border border-white shadow-sm cursor-pointer hover:bg-white transition">👂 耳朵问题</div>
+          <div onclick="quickSend('宠物腹泻了，大便很稀，今天拉了3次')" class="shrink-0 bg-white/70 backdrop-blur rounded-full px-3 py-1.5 text-[12px] font-medium text-[#2D336B] border border-white shadow-sm cursor-pointer hover:bg-white transition">💩 腹泻</div>
+        </div>
+
+        <!-- 图片预览区 -->
+        <div id="img-preview" class="px-1 mb-2">
+          <img id="preview-img" src="" alt="preview">
+          <div class="remove" onclick="removeImage()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+
+        <!-- 输入栏 -->
+        <div class="flex items-center gap-2.5 px-1">
+          <div class="flex-1 bg-white rounded-[22px] flex items-end px-3 py-2 shadow-md min-h-[52px]">
+            <textarea
+              id="msg-input"
+              placeholder="描述宠物症状…"
+              rows="1"
+              class="flex-1 bg-transparent border-none outline-none text-[14px] text-gray-700 placeholder-gray-400 resize-none max-h-24 overflow-y-auto"
+              style="line-height:1.5"
+              onkeydown="handleKey(event)"
+              oninput="autoResize(this)"
+            ></textarea>
+            <!-- 图片上传 -->
+            <label class="cursor-pointer ml-2 mb-0.5 text-[#5D5CDE] hover:text-[#4F46E5] transition">
+              <i class="fa-solid fa-image text-lg"></i>
+              <input type="file" id="file-input" accept="image/*" class="hidden" onchange="previewImage(this)">
+            </label>
+          </div>
+          <!-- 发送按钮 -->
+          <button
+            id="send-btn"
+            onclick="sendMessage()"
+            class="w-[52px] h-[52px] shrink-0 rounded-full bg-gradient-to-br from-[#5D5CDE] to-[#4F46E5] flex items-center justify-center text-white shadow-md hover:opacity-90 transition disabled:opacity-40 cursor-pointer"
+          >
+            <i id="send-icon" class="fa-solid fa-arrow-up text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════ 侧边栏遮罩 ══════ -->
+      <div id="drawer-overlay" onclick="closeDrawer()"></div>
+
+      <!-- ══════ 用户档案侧边栏 ══════ -->
+      <div id="drawer">
+        <div class="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-[#E7E9FF] via-[#F4EBFA] to-[#F2F4F7] pointer-events-none"></div>
+        <div onclick="closeDrawer()" style="position:absolute;top:16px;right:16px;z-index:60;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <i class="fa-solid fa-xmark text-gray-500"></i>
+        </div>
+        <div style="position:relative;z-index:10;padding-bottom:80px">
+          <!-- 用户信息 -->
+          <div style="padding:48px 20px 20px;display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                <img src="https://images.unsplash.com/photo-1566492031525-8782bd243765?w=150&h=150&fit=crop" style="width:100%;height:100%;object-fit:cover">
+              </div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:2px">小福的主人</div>
+                <div style="font-size:12px;color:#888;cursor:pointer">订单·设置 ›</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:20px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer">
+                <i class="fa-regular fa-bell" style="font-size:20px;color:#2D336B"></i>
+                <span style="font-size:11px;color:#666">消息</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer">
+                <i class="fa-solid fa-gift" style="font-size:20px;color:#2D336B"></i>
+                <span style="font-size:11px;color:#666">任务中心</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 两个大卡片 -->
+          <div style="padding:0 16px;display:flex;gap:12px;margin-bottom:20px">
+            <div class="drawer-glass" style="flex:1;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:50%;background:#3B82F6;color:white;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div style="font-size:15px;font-weight:700">医疗保障</div>
+                <div style="font-size:11px;color:#888;margin-top:2px">医保商保服务</div>
+              </div>
+            </div>
+            <div class="drawer-glass" style="flex:1;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:50%;background:#7C3AED;color:white;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+                <i class="fa-solid fa-file-medical"></i>
+              </div>
+              <div>
+                <div style="font-size:15px;font-weight:700">健康档案</div>
+                <div style="font-size:11px;color:#888;margin-top:2px">家人健康管理</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 历史对话 -->
+          <div style="background:white;border-radius:24px 24px 0 0;padding:24px 20px;min-height:400px">
+            <h2 style="font-size:17px;font-weight:700;margin-bottom:16px">对话记录</h2>
+            <div id="history-list" style="display:flex;flex-direction:column;gap:2px">
+              <div style="font-size:12px;color:#aaa;margin-bottom:8px;font-weight:500">今天</div>
+              <div onclick="closeDrawer()" style="background:#f5f5f5;margin:0 -20px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+                <div style="font-size:15px;color:#333">当前对话</div>
+                <div id="drawer-time" style="font-size:12px;color:#aaa"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /Mobile Container -->
+  </body>
+
+  <script>
+    const API_BASE = 'http://localhost:8000'
+    const chatArea = document.getElementById('chat-area')
+    let pendingImageFile = null
+
+    // 当前时间
+    document.getElementById('drawer-time').textContent = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})
+
+    // ── 自动高度 ──
+    function autoResize(el) {
+      el.style.height = 'auto'
+      el.style.height = Math.min(el.scrollHeight, 96) + 'px'
+    }
+
+    // ── 快捷发送 ──
+    function quickSend(text) {
+      document.getElementById('msg-input').value = text
+      sendMessage()
+    }
+
+    // ── 键盘处理：Enter发送，Shift+Enter换行 ──
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        sendMessage()
+      }
+    }
+
+    // ── 图片预览 ──
+    function previewImage(input) {
+      if (!input.files || !input.files[0]) return
+      pendingImageFile = input.files[0]
+      const reader = new FileReader()
+      reader.onload = e => {
+        document.getElementById('preview-img').src = e.target.result
+        document.getElementById('img-preview').style.display = 'block'
+      }
+      reader.readAsDataURL(pendingImageFile)
+    }
+
+    function removeImage() {
+      pendingImageFile = null
+      document.getElementById('img-preview').style.display = 'none'
+      document.getElementById('preview-img').src = ''
+      document.getElementById('file-input').value = ''
+    }
+
+    // ── 添加气泡 ──
+    function addBubble(role, text) {
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble-wrap' + (role === 'user' ? ' user' : '')
+
+      const avatar = document.createElement('img')
+      avatar.className = 'avatar ' + (role === 'ai' ? 'ai' : 'user')
+      avatar.src = role === 'ai'
+        ? 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop'
+        : 'https://images.unsplash.com/photo-1566492031525-8782bd243765?w=100&h=100&fit=crop'
+      avatar.alt = role
+
+      const bubble = document.createElement('div')
+      bubble.className = 'bubble ' + role
+      bubble.textContent = text
+
+      if (role === 'user') {
+        wrap.appendChild(bubble)
+        wrap.appendChild(avatar)
+      } else {
+        wrap.appendChild(avatar)
+        wrap.appendChild(bubble)
+      }
+
+      chatArea.appendChild(wrap)
+      scrollBottom()
+      return bubble
+    }
+
+    // ── 添加图片气泡 ──
+    function addImageBubble(src) {
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble-wrap user'
+      const avatar = document.createElement('img')
+      avatar.className = 'avatar user'
+      avatar.src = 'https://images.unsplash.com/photo-1566492031525-8782bd243765?w=100&h=100&fit=crop'
+      const imgEl = document.createElement('img')
+      imgEl.src = src
+      imgEl.style.cssText = 'width:120px;height:120px;object-fit:cover;border-radius:16px;border:2px solid #e0e7ff'
+      wrap.appendChild(imgEl)
+      wrap.appendChild(avatar)
+      chatArea.appendChild(wrap)
+      scrollBottom()
+    }
+
+    // ── 打字指示器 ──
+    function showTyping() {
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble-wrap'
+      wrap.id = 'typing-indicator'
+      const avatar = document.createElement('img')
+      avatar.className = 'avatar ai'
+      avatar.src = 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop'
+      const bubble = document.createElement('div')
+      bubble.className = 'bubble ai typing'
+      bubble.innerHTML = '<span></span><span></span><span></span>'
+      wrap.appendChild(avatar)
+      wrap.appendChild(bubble)
+      chatArea.appendChild(wrap)
+      scrollBottom()
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing-indicator')
+      if (el) el.remove()
+    }
+
+    function scrollBottom() {
+      chatArea.scrollTop = chatArea.scrollHeight
+    }
+
+    // ── 主发送逻辑 ──
+    async function sendMessage() {
+      const input = document.getElementById('msg-input')
+      const text = input.value.trim()
+      if (!text && !pendingImageFile) return
+
+      const btn = document.getElementById('send-btn')
+      const icon = document.getElementById('send-icon')
+      btn.disabled = true
+      icon.className = 'fa-solid fa-spinner fa-spin text-lg'
+
+      // 显示用户消息
+      if (text) addBubble('user', text)
+      if (pendingImageFile) addImageBubble(document.getElementById('preview-img').src)
+
+      // 重置输入
+      const sentText = text || '请分析这张图片中宠物的健康状况'
+      const sentFile = pendingImageFile
+      input.value = ''
+      input.style.height = 'auto'
+      removeImage()
+
+      // 显示打字中
+      showTyping()
+
+      try {
+        let aiTextBubble = null
+
+        if (sentFile) {
+          // 图文问诊
+          const form = new FormData()
+          form.append('symptom', sentText)
+          form.append('image', sentFile)
+          const res = await fetch(`${API_BASE}/api/v1/diagnosis/image`, { method: 'POST', body: form })
+          await processSSE(res, () => {
+            hideTyping()
+            aiTextBubble = addBubble('ai', '')
+            return aiTextBubble
+          })
+        } else {
+          // 纯文字问诊
+          const form = new FormData()
+          form.append('symptom', sentText)
+          const res = await fetch(`${API_BASE}/api/v1/diagnosis/text`, { method: 'POST', body: form })
+          await processSSE(res, () => {
+            hideTyping()
+            aiTextBubble = addBubble('ai', '')
+            return aiTextBubble
+          })
+        }
+      } catch (err) {
+        hideTyping()
+        addBubble('ai', '⚠️ 连接服务失败，请确认后端已启动（localhost:8000）\n错误：' + err.message)
+      } finally {
+        btn.disabled = false
+        icon.className = 'fa-solid fa-arrow-up text-lg'
+      }
+    }
+
+    // ── SSE 流式读取 ──
+    async function processSSE(response, onFirstChunk) {
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({detail: '未知错误'}))
+        hideTyping()
+        addBubble('ai', '⚠️ ' + (err.detail || '请求失败'))
+        return
+      }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let bubble = null
+      let buffer = ''
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() // 保留未完整的行
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const data = line.slice(6)
+          if (data === '[DONE]') break
+          if (!bubble) bubble = onFirstChunk()
+          bubble.textContent += data
+          scrollBottom()
+        }
+      }
+      // 处理最后可能残留的缓冲
+      if (buffer.startsWith('data: ')) {
+        const data = buffer.slice(6)
+        if (data && data !== '[DONE]') {
+          if (!bubble) bubble = onFirstChunk()
+          bubble.textContent += data
+          scrollBottom()
+        }
+      }
+      if (!bubble) { // 空响应保底
+        hideTyping()
+        addBubble('ai', '🤔 没有收到回答，请重试')
+      }
+    }
+
+    // ── 清除对话 ──
+    function clearChat() {
+      chatArea.innerHTML = ''
+      // 重新加欢迎消息
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble-wrap'
+      const avatar = document.createElement('img')
+      avatar.className = 'avatar ai'
+      avatar.src = 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=100&h=100&fit=crop'
+      const bubble = document.createElement('div')
+      bubble.className = 'bubble ai'
+      bubble.innerHTML = '🐾 对话已清除，有什么需要帮助的吗？'
+      wrap.appendChild(avatar)
+      wrap.appendChild(bubble)
+      chatArea.appendChild(wrap)
+    }
+
+    // ── 侧边栏 ──
+    function openDrawer() {
+      const o = document.getElementById('drawer-overlay')
+      const d = document.getElementById('drawer')
+      o.style.display = 'block'
+      requestAnimationFrame(() => { o.classList.add('open'); d.classList.add('open') })
+    }
+    function closeDrawer() {
+      const o = document.getElementById('drawer-overlay')
+      const d = document.getElementById('drawer')
+      o.classList.remove('open'); d.classList.remove('open')
+      setTimeout(() => { o.style.display = 'none' }, 320)
+    }
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeDrawer() })
+  </script>
+</html>

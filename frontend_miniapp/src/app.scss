@@ -1,0 +1,28 @@
+// 全局样式
+page {
+  background-color: #f8fdf8;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// 通用工具类
+.text-center {
+  text-align: center;
+}
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
